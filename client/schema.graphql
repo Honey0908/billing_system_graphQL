@@ -1,0 +1,104 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type AuthResponse {
+  firm: Firm!
+  token: String!
+  user: User!
+}
+
+type Bill {
+  amount: Float!
+  createdAt: String!
+  customerName: String
+  customerPhone: String
+  firm: Firm!
+  id: ID!
+  items: [BillItem!]!
+  title: String!
+  totalAmount: Float!
+  user: User!
+}
+
+type BillItem {
+  id: ID!
+  price: Float!
+  product: Product!
+  quantity: Int!
+  total: Float!
+}
+
+input BillItemInput {
+  productId: ID!
+  quantity: Int!
+}
+
+input CreateBillInput {
+  customerName: String
+  customerPhone: String
+  items: [BillItemInput!]!
+  title: String!
+}
+
+type Firm {
+  address: String
+  bills: [Bill!]!
+  email: String!
+  id: ID!
+  name: String!
+  phone: String!
+  users: [User!]!
+}
+
+type Mutation {
+  _empty: String
+  createBill(input: CreateBillInput!): Bill!
+  createProduct(input: ProductInput!): Product!
+  createUser(email: String!, firmId: ID!, name: String!, password: String!, role: UserRole!): User!
+  deleteBill(id: ID!): Boolean!
+  deleteProduct(id: ID!): Boolean!
+  login(email: String!, password: String!): AuthResponse!
+  signUpFirm(adminEmail: String!, adminName: String!, adminPassword: String!, firmAddress: String, firmEmail: String!, firmName: String!, firmPhone: String): AuthResponse!
+  updateBill(id: ID!, input: CreateBillInput!): Bill!
+  updateProduct(id: ID!, input: ProductInput!): Product!
+}
+
+type Product {
+  createdAt: String!
+  firm: Firm!
+  id: ID!
+  name: String!
+  price: Float!
+}
+
+input ProductInput {
+  name: String!
+  price: Float!
+}
+
+type Query {
+  _empty: String
+  bill(id: ID!): Bill
+  bills: [Bill!]!
+  me: User
+  myBills: [Bill!]!
+  product(id: ID!): Product
+  products: [Product!]!
+  users: [User!]!
+}
+
+type User {
+  email: String!
+  firm: Firm!
+  id: ID!
+  name: String!
+  password: String
+  role: UserRole!
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
