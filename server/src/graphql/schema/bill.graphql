@@ -1,0 +1,45 @@
+# Bill schema
+
+type Bill {
+  id: ID!
+  title: String!
+  createdAt: String!
+  user: User!
+  items: [BillItem!]!
+  totalAmount: Float!
+  firm: Firm!
+  customerName: String
+  customerPhone: String
+}
+
+type BillItem {
+  id: ID!
+  product: Product!
+  quantity: Int!
+  price: Float!
+  total: Float!
+}
+
+input BillItemInput {
+  productId: ID!
+  quantity: Int!
+}
+
+input CreateBillInput {
+  title: String!
+  customerName: String
+  customerPhone: String
+  items: [BillItemInput!]!
+}
+
+extend type Query {
+  bills: [Bill!]!
+  bill(id: ID!): Bill
+  myBills: [Bill!]!
+}
+
+extend type Mutation {
+  createBill(input: CreateBillInput!): Bill!
+  updateBill(id: ID!, input: CreateBillInput!): Bill!
+  deleteBill(id: ID!): Boolean!
+}

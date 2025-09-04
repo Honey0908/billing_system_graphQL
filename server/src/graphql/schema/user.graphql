@@ -1,0 +1,36 @@
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  password: String
+  role: UserRole!
+  firm: Firm!
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+type AuthResponse {
+  token: String!
+  firm: Firm!
+  user: User!
+}
+
+extend type Mutation {
+  createUser(
+    name: String!
+    email: String!
+    password: String!
+    role: UserRole!
+    firmId: ID!
+  ): User!
+
+  login(email: String!, password: String!): AuthResponse!
+}
+
+extend type Query {
+  me: User
+  users: [User!]!
+}

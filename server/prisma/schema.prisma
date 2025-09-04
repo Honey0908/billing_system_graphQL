@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id        String   @id @default(uuid())
+  email     String    @unique
+  name      String?
+  password  String
+  role      Role      @default(STAFF)  // admin or staff
+  firmId    String
+  firm      Firm      @relation(fields: [firmId], references: [id])
+  bills     Bill[]    // user’s bills
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Firm {
+  id        String    @id @default(uuid())
+  name      String
+  address   String
+  phone     String
+  email     String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  users     User[]
+  bills     Bill[]
+  products  Product[]
+}
+
+model Bill {
+  id           String     @id @default(uuid())
+  title        String
+  customerName String?
+  customerPhone String?
+  totalAmount  Float
+  createdAt    DateTime   @default(now())
+
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+
+  firmId       String
+  firm         Firm       @relation(fields: [firmId], references: [id])
+
+  items        BillItem[]
+}
+
+model Product {
+  id        String     @id @default(uuid())
+  name      String
+  price     Float
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  firmId    String
+  firm      Firm       @relation(fields: [firmId], references: [id])
+
+  billItems BillItem[]
+}
+
+model BillItem {
+  id       String @id @default(uuid())
+  quantity Int
+  price    Float  // price at time of purchase
+  total    Float  // quantity * price
+
+  billId   String
+  bill     Bill   @relation(fields: [billId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}

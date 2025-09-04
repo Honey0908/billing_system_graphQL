@@ -1,0 +1,22 @@
+type Firm {
+  id: ID!
+  name: String!
+  address: String
+  email: String!
+  users: [User!]!
+  bills: [Bill!]!
+  email: String
+  phone: String!
+}
+
+extend type Mutation {
+  signUpFirm(
+    firmName: String!
+    firmEmail: String!
+    firmAddress: String
+    firmPhone: String
+    adminEmail: String!
+    adminPassword: String!
+    adminName: String!
+  ): AuthResponse!
+}
