@@ -58,10 +58,12 @@ src/
 
 ### 2. React Best Practices (React 19)
 - Use **function components** with hooks
-- Leverage **useActionState** for form handling instead of multiple useState
+- **MANDATORY**: All forms must use **`useActionState`** for form handling instead of multiple useState
+- **MANDATORY**: All mutations must use **`useOptimistic`** for optimistic updates
+- **MANDATORY**: Use **`useTransition`** for non-urgent state updates and loading states
+- **MANDATORY**: Use **`use` hook** for async data fetching instead of useEffect patterns
 - Use **React.memo** for performance optimization where needed
 - Implement **Suspense** and **ErrorBoundary** for better UX
-- Use **useTransition** for non-urgent state updates
 
 ### 3. State Management
 - Use **React Query/TanStack Query** for server state
@@ -447,6 +449,280 @@ const ChartContainer = ({
   onRangeChange,
 }: any) => {
   // Bad implementation
+};
+```
+
+**React 19 Form Handling & Mutations:**
+
+- ✅ **Use `useActionState` for all forms** - React 19's built-in form state management
+- ✅ **Use `useOptimistic` for mutations** - Optimistic updates with automatic rollback
+- ✅ **Use `useTransition` for non-urgent updates** - Better user experience with loading states
+- ✅ **Use `use` hook for promises** - Simplified async data handling
+- ✅ **Leverage Server Actions pattern** - When applicable for form submissions
+- ❌ **Don't use multiple `useState` for forms** - Replace with single `useActionState`
+- ❌ **Don't manually manage loading states** - Use `useTransition` and `useOptimistic`
+- ❌ **Don't use old form patterns** - Avoid react-hook-form or formik for simple forms
+
+```tsx
+// ✅ React 19: Form handling with useActionState
+import { useActionState, useTransition } from "react";
+
+interface LoginFormState {
+  email: string;
+  password: string;
+  errors?: {
+    email?: string;
+    password?: string;
+    form?: string;
+  };
+  isLoading?: boolean;
+}
+
+const initialState: LoginFormState = {
+  email: "",
+  password: "",
+};
+
+async function loginAction(
+  prevState: LoginFormState,
+  formData: FormData
+): Promise<LoginFormState> {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  // Validation
+  const errors: LoginFormState["errors"] = {};
+  if (!email) errors.email = "Email is required";
+  if (!password) errors.password = "Password is required";
+  
+  if (Object.keys(errors).length > 0) {
+    return { email, password, errors };
+  }
+
+  try {
+    // API call
+    await submitLogin({ email, password });
+    return { email: "", password: "" }; // Success - clear form
+  } catch (error) {
+    return {
+      email,
+      password,
+      errors: { form: "Login failed. Please try again." },
+    };
+  }
+}
+
+const LoginForm: React.FC = () => {
+  const [state, formAction, isPending] = useActionState(loginAction, initialState);
+
+  return (
+    <form action={formAction} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          defaultValue={state.email}
+          className={state.errors?.email ? "border-destructive" : ""}
+          disabled={isPending}
+        />
+        {state.errors?.email && (
+          <p className="text-sm text-destructive">{state.errors.email}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          defaultValue={state.password}
+          className={state.errors?.password ? "border-destructive" : ""}
+          disabled={isPending}
+        />
+        {state.errors?.password && (
+          <p className="text-sm text-destructive">{state.errors.password}</p>
+        )}
+      </div>
+
+      {state.errors?.form && (
+        <p className="text-sm text-destructive">{state.errors.form}</p>
+      )}
+
+      <Button type="submit" disabled={isPending} className="w-full">
+        {isPending ? "Signing in..." : "Sign in"}
+      </Button>
+    </form>
+  );
+};
+
+// ❌ Old pattern: Multiple useState for forms
+const OldLoginForm = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    // Manual form handling...
+  };
+  // This pattern is outdated in React 19
+};
+```
+
+**React 19 Optimistic Mutations:**
+
+```tsx
+// ✅ React 19: Optimistic updates with useOptimistic
+import { useOptimistic, useTransition } from "react";
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  isActive: boolean;
+}
+
+const ProductList: React.FC<{ products: Product[] }> = ({ products }) => {
+  const [optimisticProducts, addOptimisticProduct] = useOptimistic(
+    products,
+    (state, newProduct: Product) => [...state, newProduct]
+  );
+  const [isPending, startTransition] = useTransition();
+
+  const createProduct = async (formData: FormData) => {
+    const newProduct: Product = {
+      id: crypto.randomUUID(), // Temporary ID
+      name: formData.get("name") as string,
+      price: Number(formData.get("price")),
+      isActive: true,
+    };
+
+    // Optimistically add product to UI
+    addOptimisticProduct(newProduct);
+
+    // Start transition for the actual API call
+    startTransition(async () => {
+      try {
+        await createProductAPI(newProduct);
+        // On success, the server data will update the real state
+      } catch (error) {
+        // On error, optimistic update automatically rolls back
+        console.error("Failed to create product:", error);
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <form action={createProduct} className="space-y-4">
+        <Input name="name" placeholder="Product name" required />
+        <Input name="price" type="number" placeholder="Price" required />
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Creating..." : "Create Product"}
+        </Button>
+      </form>
+
+      <div className="space-y-2">
+        {optimisticProducts.map((product) => (
+          <div
+            key={product.id}
+            className={`p-4 border rounded-lg ${
+              isPending && !products.find(p => p.id === product.id)
+                ? "opacity-50" // Show optimistic items as pending
+                : ""
+            }`}
+          >
+            <h3 className="font-medium">{product.name}</h3>
+            <p className="text-muted-foreground">${product.price}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ❌ Old pattern: Manual optimistic updates
+const OldProductList = ({ products }) => {
+  const [optimisticProducts, setOptimisticProducts] = useState(products);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const createProduct = async (productData) => {
+    setIsLoading(true);
+    const tempProduct = { ...productData, id: Date.now() };
+    
+    // Manual optimistic update
+    setOptimisticProducts(prev => [...prev, tempProduct]);
+    
+    try {
+      const result = await createProductAPI(productData);
+      // Manual state reconciliation
+      setOptimisticProducts(prev => 
+        prev.map(p => p.id === tempProduct.id ? result : p)
+      );
+    } catch (error) {
+      // Manual rollback
+      setOptimisticProducts(prev => 
+        prev.filter(p => p.id !== tempProduct.id)
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  // This manual approach is replaced by useOptimistic
+};
+```
+
+**React 19 Async Data with `use` Hook:**
+
+```tsx
+// ✅ React 19: Simplified async data handling
+import { use, Suspense } from "react";
+
+const ProductDetail: React.FC<{ productPromise: Promise<Product> }> = ({
+  productPromise,
+}) => {
+  const product = use(productPromise); // Suspends until resolved
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">{product.name}</h1>
+      <p className="text-muted-foreground">${product.price}</p>
+      <p>{product.description}</p>
+    </div>
+  );
+};
+
+const ProductPage: React.FC<{ productId: string }> = ({ productId }) => {
+  const productPromise = fetchProduct(productId); // Start fetch immediately
+
+  return (
+    <Suspense fallback={<div>Loading product...</div>}>
+      <ProductDetail productPromise={productPromise} />
+    </Suspense>
+  );
+};
+
+// ❌ Old pattern: useEffect with useState
+const OldProductDetail = ({ productId }) => {
+  const [product, setProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchProduct(productId)
+      .then(setProduct)
+      .catch(setError)
+      .finally(() => setIsLoading(false));
+  }, [productId]);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  // This pattern is simplified with the use hook
 };
 ```
 
