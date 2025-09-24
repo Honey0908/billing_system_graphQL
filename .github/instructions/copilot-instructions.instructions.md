@@ -1,5 +1,5 @@
 ---
-applyTo: '**'
+applyTo: 'client'
 ---
 
 # Billing System Development Guidelines

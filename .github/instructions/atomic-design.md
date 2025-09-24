@@ -1,3 +1,7 @@
+---
+applyTo: 'client'
+---
+
 # Atomic Design Structure
 
 This project follows the Atomic Design methodology by Brad Frost. The component architecture is organized into five distinct levels:
