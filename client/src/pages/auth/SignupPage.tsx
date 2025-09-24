@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useActionState, useTransition } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,105 +26,115 @@ interface SignupFormData {
   confirmPassword: string;
 }
 
+interface SignupState {
+  data: SignupFormData;
+  errors?: Partial<SignupFormData>;
+  message?: string;
+}
+
 export default function SignupPage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<SignupFormData>({
-    firmName: "",
-    firmAddress: "",
-    firmContact: "",
-    firmEmail: "",
-    adminName: "",
-    adminContact: "",
-    adminPassword: "",
-    confirmPassword: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Partial<SignupFormData>>({});
+  const [isPending, startTransition] = useTransition();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // Signup action using React 19 useActionState
+  const signupAction = async (
+    _prevState: SignupState,
+    formData: FormData
+  ): Promise<SignupState> => {
+    const data: SignupFormData = {
+      firmName: formData.get("firmName") as string,
+      firmAddress: formData.get("firmAddress") as string,
+      firmContact: formData.get("firmContact") as string,
+      firmEmail: formData.get("firmEmail") as string,
+      adminName: formData.get("adminName") as string,
+      adminContact: formData.get("adminContact") as string,
+      adminPassword: formData.get("adminPassword") as string,
+      confirmPassword: formData.get("confirmPassword") as string,
+    };
 
-    // Clear error when user starts typing
-    if (errors[name as keyof SignupFormData]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Partial<SignupFormData> = {};
+    // Validation logic
+    const errors: Partial<SignupFormData> = {};
 
     // Required field validation
-    if (!formData.firmName.trim()) newErrors.firmName = "Firm name is required";
-    if (!formData.firmAddress.trim())
-      newErrors.firmAddress = "Firm address is required";
-    if (!formData.firmContact.trim())
-      newErrors.firmContact = "Firm contact is required";
-    if (!formData.firmEmail.trim())
-      newErrors.firmEmail = "Firm email is required";
-    if (!formData.adminName.trim())
-      newErrors.adminName = "Admin name is required";
-    if (!formData.adminContact.trim())
-      newErrors.adminContact = "Admin contact is required";
-    if (!formData.adminPassword)
-      newErrors.adminPassword = "Password is required";
-    if (!formData.confirmPassword)
-      newErrors.confirmPassword = "Please confirm password";
+    if (!data.firmName.trim()) errors.firmName = "Firm name is required";
+    if (!data.firmAddress.trim()) errors.firmAddress = "Firm address is required";
+    if (!data.firmContact.trim()) errors.firmContact = "Firm contact is required";
+    if (!data.firmEmail.trim()) errors.firmEmail = "Firm email is required";
+    if (!data.adminName.trim()) errors.adminName = "Admin name is required";
+    if (!data.adminContact.trim()) errors.adminContact = "Admin contact is required";
+    if (!data.adminPassword) errors.adminPassword = "Password is required";
+    if (!data.confirmPassword) errors.confirmPassword = "Please confirm password";
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.firmEmail && !emailRegex.test(formData.firmEmail)) {
-      newErrors.firmEmail = "Please enter a valid email address";
+    if (data.firmEmail && !emailRegex.test(data.firmEmail)) {
+      errors.firmEmail = "Please enter a valid email address";
     }
 
     // Password validation
-    if (formData.adminPassword && formData.adminPassword.length < 6) {
-      newErrors.adminPassword = "Password must be at least 6 characters";
+    if (data.adminPassword && data.adminPassword.length < 6) {
+      errors.adminPassword = "Password must be at least 6 characters";
     }
 
     // Password confirmation
-    if (formData.adminPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+    if (data.adminPassword !== data.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
     }
 
     // Phone number validation (basic)
     const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
-    if (formData.firmContact && !phoneRegex.test(formData.firmContact)) {
-      newErrors.firmContact = "Please enter a valid phone number";
+    if (data.firmContact && !phoneRegex.test(data.firmContact)) {
+      errors.firmContact = "Please enter a valid phone number";
     }
-    if (formData.adminContact && !phoneRegex.test(formData.adminContact)) {
-      newErrors.adminContact = "Please enter a valid phone number";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
+    if (data.adminContact && !phoneRegex.test(data.adminContact)) {
+      errors.adminContact = "Please enter a valid phone number";
     }
 
-    setIsLoading(true);
+    if (Object.keys(errors).length > 0) {
+      return {
+        data: { ...data, adminPassword: "", confirmPassword: "" },
+        errors,
+        message: "Please fix the errors above",
+      };
+    }
 
-    // TODO: Implement actual signup logic with GraphQL
-    console.log("Signup attempt:", formData);
+    try {
+      // TODO: Implement actual signup logic with GraphQL
+      console.log("Signup attempt:", data);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       // TODO: Handle signup response and redirect to dashboard
-      navigate(ROUTES.DASHBOARD);
-    }, 2000);
+      startTransition(() => {
+        navigate(ROUTES.DASHBOARD);
+      });
+
+      return {
+        data: { ...data, adminPassword: "", confirmPassword: "" },
+        message: "Account created successfully! Redirecting...",
+      };
+    } catch {
+      return {
+        data: { ...data, adminPassword: "", confirmPassword: "" },
+        errors: { firmEmail: "Failed to create account" },
+        message: "Signup failed. Please try again.",
+      };
+    }
   };
+
+  const [state, formAction] = useActionState(signupAction, {
+    data: {
+      firmName: "",
+      firmAddress: "",
+      firmContact: "",
+      firmEmail: "",
+      adminName: "",
+      adminContact: "",
+      adminPassword: "",
+      confirmPassword: "",
+    },
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -138,7 +148,7 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form action={formAction} className="space-y-6">
             {/* Firm Information Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground border-b pb-2">
@@ -152,13 +162,12 @@ export default function SignupPage() {
                     id="firmName"
                     name="firmName"
                     placeholder="ABC Company Pvt Ltd"
-                    value={formData.firmName}
-                    onChange={handleInputChange}
-                    className={errors.firmName ? "border-destructive" : ""}
+                    defaultValue={state.data.firmName}
+                    className={state.errors?.firmName ? "border-destructive" : ""}
                   />
-                  {errors.firmName && (
+                  {state.errors?.firmName && (
                     <p className="text-sm text-destructive">
-                      {errors.firmName}
+                      {state.errors.firmName}
                     </p>
                   )}
                 </div>
@@ -170,13 +179,12 @@ export default function SignupPage() {
                     name="firmEmail"
                     type="email"
                     placeholder="info@company.com"
-                    value={formData.firmEmail}
-                    onChange={handleInputChange}
-                    className={errors.firmEmail ? "border-destructive" : ""}
+                    defaultValue={state.data.firmEmail}
+                    className={state.errors?.firmEmail ? "border-destructive" : ""}
                   />
-                  {errors.firmEmail && (
+                  {state.errors?.firmEmail && (
                     <p className="text-sm text-destructive">
-                      {errors.firmEmail}
+                      {state.errors.firmEmail}
                     </p>
                   )}
                 </div>
@@ -188,13 +196,12 @@ export default function SignupPage() {
                   id="firmAddress"
                   name="firmAddress"
                   placeholder="123 Business Street, City, State, PIN"
-                  value={formData.firmAddress}
-                  onChange={handleInputChange}
-                  className={errors.firmAddress ? "border-destructive" : ""}
+                  defaultValue={state.data.firmAddress}
+                  className={state.errors?.firmAddress ? "border-destructive" : ""}
                 />
-                {errors.firmAddress && (
+                {state.errors?.firmAddress && (
                   <p className="text-sm text-destructive">
-                    {errors.firmAddress}
+                    {state.errors.firmAddress}
                   </p>
                 )}
               </div>
@@ -205,13 +212,12 @@ export default function SignupPage() {
                   id="firmContact"
                   name="firmContact"
                   placeholder="+91 9876543210"
-                  value={formData.firmContact}
-                  onChange={handleInputChange}
-                  className={errors.firmContact ? "border-destructive" : ""}
+                  defaultValue={state.data.firmContact}
+                  className={state.errors?.firmContact ? "border-destructive" : ""}
                 />
-                {errors.firmContact && (
+                {state.errors?.firmContact && (
                   <p className="text-sm text-destructive">
-                    {errors.firmContact}
+                    {state.errors.firmContact}
                   </p>
                 )}
               </div>
@@ -230,13 +236,12 @@ export default function SignupPage() {
                     id="adminName"
                     name="adminName"
                     placeholder="John Doe"
-                    value={formData.adminName}
-                    onChange={handleInputChange}
-                    className={errors.adminName ? "border-destructive" : ""}
+                    defaultValue={state.data.adminName}
+                    className={state.errors?.adminName ? "border-destructive" : ""}
                   />
-                  {errors.adminName && (
+                  {state.errors?.adminName && (
                     <p className="text-sm text-destructive">
-                      {errors.adminName}
+                      {state.errors.adminName}
                     </p>
                   )}
                 </div>
@@ -247,13 +252,12 @@ export default function SignupPage() {
                     id="adminContact"
                     name="adminContact"
                     placeholder="+91 9876543210"
-                    value={formData.adminContact}
-                    onChange={handleInputChange}
-                    className={errors.adminContact ? "border-destructive" : ""}
+                    defaultValue={state.data.adminContact}
+                    className={state.errors?.adminContact ? "border-destructive" : ""}
                   />
-                  {errors.adminContact && (
+                  {state.errors?.adminContact && (
                     <p className="text-sm text-destructive">
-                      {errors.adminContact}
+                      {state.errors.adminContact}
                     </p>
                   )}
                 </div>
@@ -267,13 +271,12 @@ export default function SignupPage() {
                     name="adminPassword"
                     type="password"
                     placeholder="Minimum 6 characters"
-                    value={formData.adminPassword}
-                    onChange={handleInputChange}
-                    className={errors.adminPassword ? "border-destructive" : ""}
+                    defaultValue={state.data.adminPassword}
+                    className={state.errors?.adminPassword ? "border-destructive" : ""}
                   />
-                  {errors.adminPassword && (
+                  {state.errors?.adminPassword && (
                     <p className="text-sm text-destructive">
-                      {errors.adminPassword}
+                      {state.errors.adminPassword}
                     </p>
                   )}
                 </div>
@@ -285,23 +288,28 @@ export default function SignupPage() {
                     name="confirmPassword"
                     type="password"
                     placeholder="Re-enter password"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
+                    defaultValue={state.data.confirmPassword}
                     className={
-                      errors.confirmPassword ? "border-destructive" : ""
+                      state.errors?.confirmPassword ? "border-destructive" : ""
                     }
                   />
-                  {errors.confirmPassword && (
+                  {state.errors?.confirmPassword && (
                     <p className="text-sm text-destructive">
-                      {errors.confirmPassword}
+                      {state.errors.confirmPassword}
                     </p>
                   )}
                 </div>
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating Account..." : "Create Firm Account"}
+            {state.message && (
+              <div className={`text-sm ${state.errors ? 'text-destructive' : 'text-green-600'}`}>
+                {state.message}
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Creating Account..." : "Create Firm Account"}
             </Button>
           </form>
 

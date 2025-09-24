@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useActionState, useTransition } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,36 +17,71 @@ interface LoginFormData {
   password: string;
 }
 
+interface LoginState {
+  data: LoginFormData;
+  errors?: Partial<LoginFormData>;
+  message?: string;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // Login action using React 19 useActionState
+  const loginAction = async (
+    _prevState: LoginState,
+    formData: FormData
+  ): Promise<LoginState> => {
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    // Basic validation
+    const errors: Partial<LoginFormData> = {};
+    if (!email.trim()) errors.email = "Email is required";
+    if (!password) errors.password = "Password is required";
 
-    // TODO: Implement actual login logic with GraphQL
-    console.log("Login attempt:", formData);
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email)) {
+      errors.email = "Please enter a valid email address";
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    if (Object.keys(errors).length > 0) {
+      return {
+        data: { email, password: "" },
+        errors,
+        message: "Please fix the errors above",
+      };
+    }
+
+    try {
+      // TODO: Implement actual login logic with GraphQL
+      console.log("Login attempt:", { email, password });
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // TODO: Handle login response and redirect to dashboard
-      navigate(ROUTES.DASHBOARD);
-    }, 2000);
+      startTransition(() => {
+        navigate(ROUTES.DASHBOARD);
+      });
+
+      return {
+        data: { email, password: "" },
+        message: "Login successful! Redirecting...",
+      };
+    } catch {
+      return {
+        data: { email, password: "" },
+        errors: { email: "Invalid credentials" },
+        message: "Login failed. Please try again.",
+      };
+    }
   };
+
+  const [state, formAction] = useActionState(loginAction, {
+    data: { email: "", password: "" },
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -60,7 +95,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form action={formAction} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -68,10 +103,12 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 placeholder="admin@company.com"
-                value={formData.email}
-                onChange={handleInputChange}
+                defaultValue={state.data.email}
                 required
               />
+              {state.errors?.email && (
+                <p className="text-sm text-destructive">{state.errors.email}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -80,13 +117,20 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleInputChange}
+                defaultValue={state.data.password}
                 required
               />
+              {state.errors?.password && (
+                <p className="text-sm text-destructive">{state.errors.password}</p>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+            {state.message && (
+              <div className={`text-sm ${state.errors ? 'text-destructive' : 'text-green-600'}`}>
+                {state.message}
+              </div>
+            )}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Signing in..." : "Sign in"}
             </Button>
           </form>
           <div className="mt-6 text-center">
