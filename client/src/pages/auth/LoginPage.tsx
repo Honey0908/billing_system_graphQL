@@ -19,7 +19,6 @@ interface LoginFormData {
 
 interface LoginState {
   data: LoginFormData;
-  errors?: Partial<LoginFormData>;
   message?: string;
 }
 
@@ -34,25 +33,6 @@ export default function LoginPage() {
   ): Promise<LoginState> => {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-
-    // Basic validation
-    const errors: Partial<LoginFormData> = {};
-    if (!email.trim()) errors.email = "Email is required";
-    if (!password) errors.password = "Password is required";
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email && !emailRegex.test(email)) {
-      errors.email = "Please enter a valid email address";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      return {
-        data: { email, password: "" },
-        errors,
-        message: "Please fix the errors above",
-      };
-    }
 
     try {
       // TODO: Implement actual login logic with GraphQL
@@ -73,7 +53,6 @@ export default function LoginPage() {
     } catch {
       return {
         data: { email, password: "" },
-        errors: { email: "Invalid credentials" },
         message: "Login failed. Please try again.",
       };
     }
@@ -106,9 +85,6 @@ export default function LoginPage() {
                 defaultValue={state.data.email}
                 required
               />
-              {state.errors?.email && (
-                <p className="text-sm text-destructive">{state.errors.email}</p>
-              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -120,14 +96,9 @@ export default function LoginPage() {
                 defaultValue={state.data.password}
                 required
               />
-              {state.errors?.password && (
-                <p className="text-sm text-destructive">{state.errors.password}</p>
-              )}
             </div>
             {state.message && (
-              <div className={`text-sm ${state.errors ? 'text-destructive' : 'text-green-600'}`}>
-                {state.message}
-              </div>
+              <div className="text-sm text-green-600">{state.message}</div>
             )}
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? "Signing in..." : "Sign in"}

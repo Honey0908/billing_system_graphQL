@@ -28,7 +28,6 @@ interface SignupFormData {
 
 interface SignupState {
   data: SignupFormData;
-  errors?: Partial<SignupFormData>;
   message?: string;
 }
 
@@ -52,52 +51,6 @@ export default function SignupPage() {
       confirmPassword: formData.get("confirmPassword") as string,
     };
 
-    // Validation logic
-    const errors: Partial<SignupFormData> = {};
-
-    // Required field validation
-    if (!data.firmName.trim()) errors.firmName = "Firm name is required";
-    if (!data.firmAddress.trim()) errors.firmAddress = "Firm address is required";
-    if (!data.firmContact.trim()) errors.firmContact = "Firm contact is required";
-    if (!data.firmEmail.trim()) errors.firmEmail = "Firm email is required";
-    if (!data.adminName.trim()) errors.adminName = "Admin name is required";
-    if (!data.adminContact.trim()) errors.adminContact = "Admin contact is required";
-    if (!data.adminPassword) errors.adminPassword = "Password is required";
-    if (!data.confirmPassword) errors.confirmPassword = "Please confirm password";
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (data.firmEmail && !emailRegex.test(data.firmEmail)) {
-      errors.firmEmail = "Please enter a valid email address";
-    }
-
-    // Password validation
-    if (data.adminPassword && data.adminPassword.length < 6) {
-      errors.adminPassword = "Password must be at least 6 characters";
-    }
-
-    // Password confirmation
-    if (data.adminPassword !== data.confirmPassword) {
-      errors.confirmPassword = "Passwords do not match";
-    }
-
-    // Phone number validation (basic)
-    const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
-    if (data.firmContact && !phoneRegex.test(data.firmContact)) {
-      errors.firmContact = "Please enter a valid phone number";
-    }
-    if (data.adminContact && !phoneRegex.test(data.adminContact)) {
-      errors.adminContact = "Please enter a valid phone number";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      return {
-        data: { ...data, adminPassword: "", confirmPassword: "" },
-        errors,
-        message: "Please fix the errors above",
-      };
-    }
-
     try {
       // TODO: Implement actual signup logic with GraphQL
       console.log("Signup attempt:", data);
@@ -117,7 +70,6 @@ export default function SignupPage() {
     } catch {
       return {
         data: { ...data, adminPassword: "", confirmPassword: "" },
-        errors: { firmEmail: "Failed to create account" },
         message: "Signup failed. Please try again.",
       };
     }
@@ -163,13 +115,8 @@ export default function SignupPage() {
                     name="firmName"
                     placeholder="ABC Company Pvt Ltd"
                     defaultValue={state.data.firmName}
-                    className={state.errors?.firmName ? "border-destructive" : ""}
+                    required
                   />
-                  {state.errors?.firmName && (
-                    <p className="text-sm text-destructive">
-                      {state.errors.firmName}
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -180,13 +127,8 @@ export default function SignupPage() {
                     type="email"
                     placeholder="info@company.com"
                     defaultValue={state.data.firmEmail}
-                    className={state.errors?.firmEmail ? "border-destructive" : ""}
+                    required
                   />
-                  {state.errors?.firmEmail && (
-                    <p className="text-sm text-destructive">
-                      {state.errors.firmEmail}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -197,13 +139,8 @@ export default function SignupPage() {
                   name="firmAddress"
                   placeholder="123 Business Street, City, State, PIN"
                   defaultValue={state.data.firmAddress}
-                  className={state.errors?.firmAddress ? "border-destructive" : ""}
+                  required
                 />
-                {state.errors?.firmAddress && (
-                  <p className="text-sm text-destructive">
-                    {state.errors.firmAddress}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -211,15 +148,11 @@ export default function SignupPage() {
                 <Input
                   id="firmContact"
                   name="firmContact"
+                  type="tel"
                   placeholder="+91 9876543210"
                   defaultValue={state.data.firmContact}
-                  className={state.errors?.firmContact ? "border-destructive" : ""}
+                  required
                 />
-                {state.errors?.firmContact && (
-                  <p className="text-sm text-destructive">
-                    {state.errors.firmContact}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -237,13 +170,8 @@ export default function SignupPage() {
                     name="adminName"
                     placeholder="John Doe"
                     defaultValue={state.data.adminName}
-                    className={state.errors?.adminName ? "border-destructive" : ""}
+                    required
                   />
-                  {state.errors?.adminName && (
-                    <p className="text-sm text-destructive">
-                      {state.errors.adminName}
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -251,15 +179,11 @@ export default function SignupPage() {
                   <Input
                     id="adminContact"
                     name="adminContact"
+                    type="tel"
                     placeholder="+91 9876543210"
                     defaultValue={state.data.adminContact}
-                    className={state.errors?.adminContact ? "border-destructive" : ""}
+                    required
                   />
-                  {state.errors?.adminContact && (
-                    <p className="text-sm text-destructive">
-                      {state.errors.adminContact}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -272,13 +196,9 @@ export default function SignupPage() {
                     type="password"
                     placeholder="Minimum 6 characters"
                     defaultValue={state.data.adminPassword}
-                    className={state.errors?.adminPassword ? "border-destructive" : ""}
+                    minLength={6}
+                    required
                   />
-                  {state.errors?.adminPassword && (
-                    <p className="text-sm text-destructive">
-                      {state.errors.adminPassword}
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -289,23 +209,15 @@ export default function SignupPage() {
                     type="password"
                     placeholder="Re-enter password"
                     defaultValue={state.data.confirmPassword}
-                    className={
-                      state.errors?.confirmPassword ? "border-destructive" : ""
-                    }
+                    minLength={6}
+                    required
                   />
-                  {state.errors?.confirmPassword && (
-                    <p className="text-sm text-destructive">
-                      {state.errors.confirmPassword}
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
 
             {state.message && (
-              <div className={`text-sm ${state.errors ? 'text-destructive' : 'text-green-600'}`}>
-                {state.message}
-              </div>
+              <div className="text-sm text-green-600">{state.message}</div>
             )}
 
             <Button type="submit" className="w-full" disabled={isPending}>
