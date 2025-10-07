@@ -4,8 +4,8 @@ import { ROUTES } from "@/constants/routes";
 
 // Lazy load page components
 const HomePage = lazy(() => import("@/pages/HomePage"));
-const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
-const SignupPage = lazy(() => import("@/pages/auth/SignupPage"));
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const SignupPage = lazy(() => import("@/pages/SignupPage"));
 const DashboardPage = lazy(() => import("@/pages/dashboard/DashboardPage"));
 
 // Import components that need to be loaded immediately
