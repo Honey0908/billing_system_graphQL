@@ -9,10 +9,16 @@ const config: CodegenConfig = {
       plugins: [
         "typescript",
         "typescript-operations",
-        "typescript-react-apollo",
+        // "typescript-react-apollo",
       ],
       config: {
-        withHooks: true,
+        withHooks: false, // Disable hook generation
+        withHOC: false, // Disable HOC generation
+        withComponent: false, // Disable component generation
+        skipTypename: false,
+        withResultType: true,
+        documentVariablePrefix: "",
+        documentVariableSuffix: "Document",
       },
     },
   },
