@@ -1,5 +1,6 @@
-import { useActionState, useTransition } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,82 +12,99 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
+import type {
+  MutationSignUpFirmArgs,
+  SignUpFirmMutation,
+} from "@/graphql/graphql";
+import { execute } from "@/graphql/execute";
+import { SIGNUP_FIRM_MUTATION } from "@/schema/mutations/firm";
 
 interface SignupFormData {
   // Firm details
   firmName: string;
-  firmAddress: string;
-  firmContact: string;
   firmEmail: string;
+  firmAddress: string;
+  firmPhone: string;
 
   // Admin details
   adminName: string;
-  adminContact: string;
+  adminEmail: string;
   adminPassword: string;
   confirmPassword: string;
 }
 
-interface SignupState {
-  data: SignupFormData;
-  message?: string;
-}
-
 export default function SignupPage() {
   const navigate = useNavigate();
-  const [isPending, startTransition] = useTransition();
+  const [formData, setFormData] = useState<SignupFormData>({
+    firmName: "",
+    firmEmail: "",
+    firmAddress: "",
+    firmPhone: "",
+    adminName: "",
+    adminEmail: "",
+    adminPassword: "",
+    confirmPassword: "",
+  });
 
-  // Signup action using React 19 useActionState
-  const signupAction = async (
-    _prevState: SignupState,
-    formData: FormData
-  ): Promise<SignupState> => {
-    const data: SignupFormData = {
-      firmName: formData.get("firmName") as string,
-      firmAddress: formData.get("firmAddress") as string,
-      firmContact: formData.get("firmContact") as string,
-      firmEmail: formData.get("firmEmail") as string,
-      adminName: formData.get("adminName") as string,
-      adminContact: formData.get("adminContact") as string,
-      adminPassword: formData.get("adminPassword") as string,
-      confirmPassword: formData.get("confirmPassword") as string,
-    };
+  const [validationError, setValidationError] = useState<string>("");
 
-    try {
-      // TODO: Implement actual signup logic with GraphQL
-      console.log("Signup attempt:", data);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // TODO: Handle signup response and redirect to dashboard
-      startTransition(() => {
-        navigate(ROUTES.DASHBOARD);
-      });
-
-      return {
-        data: { ...data, adminPassword: "", confirmPassword: "" },
-        message: "Account created successfully! Redirecting...",
-      };
-    } catch {
-      return {
-        data: { ...data, adminPassword: "", confirmPassword: "" },
-        message: "Signup failed. Please try again.",
-      };
-    }
-  };
-
-  const [state, formAction] = useActionState(signupAction, {
-    data: {
-      firmName: "",
-      firmAddress: "",
-      firmContact: "",
-      firmEmail: "",
-      adminName: "",
-      adminContact: "",
-      adminPassword: "",
-      confirmPassword: "",
+  const signupMutation = useMutation<
+    { data: SignUpFirmMutation },
+    Error,
+    MutationSignUpFirmArgs
+  >({
+    mutationFn: (data) => execute(SIGNUP_FIRM_MUTATION, data),
+    onSuccess: (response) => {
+      const signUpResponse = response.data;
+      if (signUpResponse?.signUpFirm?.token) {
+        localStorage.setItem("token", signUpResponse.signUpFirm.token);
+      }
+      navigate(ROUTES.AUTH.LOGIN);
+    },
+    onError: (error) => {
+      console.error("Signup failed:", error);
     },
   });
+
+  console.log(SIGNUP_FIRM_MUTATION, "SIGNUP_FIRM_MUTATION");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setValidationError("");
+
+    // Basic validation
+    if (formData.adminPassword !== formData.confirmPassword) {
+      setValidationError("Passwords do not match");
+      return;
+    }
+
+    if (formData.adminPassword.length < 6) {
+      setValidationError("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Prepare mutation variables
+    const mutationData: MutationSignUpFirmArgs = {
+      firmName: formData.firmName,
+      firmEmail: formData.firmEmail,
+      firmAddress: formData.firmAddress || undefined,
+      firmPhone: formData.firmPhone || undefined,
+      adminEmail: formData.adminEmail,
+      adminPassword: formData.adminPassword,
+      adminName: formData.adminName,
+    };
+
+    signupMutation.mutate(mutationData);
+  };
+
+  const handleInputChange =
+    (field: keyof SignupFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: e.target.value,
+      }));
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -100,7 +118,7 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={formAction} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Firm Information Section */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground border-b pb-2">
@@ -114,7 +132,8 @@ export default function SignupPage() {
                     id="firmName"
                     name="firmName"
                     placeholder="ABC Company Pvt Ltd"
-                    defaultValue={state.data.firmName}
+                    value={formData.firmName}
+                    onChange={handleInputChange("firmName")}
                     required
                   />
                 </div>
@@ -126,32 +145,33 @@ export default function SignupPage() {
                     name="firmEmail"
                     type="email"
                     placeholder="info@company.com"
-                    defaultValue={state.data.firmEmail}
+                    value={formData.firmEmail}
+                    onChange={handleInputChange("firmEmail")}
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="firmAddress">Firm Address *</Label>
+                <Label htmlFor="firmAddress">Firm Address</Label>
                 <Input
                   id="firmAddress"
                   name="firmAddress"
                   placeholder="123 Business Street, City, State, PIN"
-                  defaultValue={state.data.firmAddress}
-                  required
+                  value={formData.firmAddress}
+                  onChange={handleInputChange("firmAddress")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="firmContact">Firm Contact Number *</Label>
+                <Label htmlFor="firmPhone">Firm Contact Number</Label>
                 <Input
-                  id="firmContact"
-                  name="firmContact"
+                  id="firmPhone"
+                  name="firmPhone"
                   type="tel"
                   placeholder="+91 9876543210"
-                  defaultValue={state.data.firmContact}
-                  required
+                  value={formData.firmPhone}
+                  onChange={handleInputChange("firmPhone")}
                 />
               </div>
             </div>
@@ -169,19 +189,21 @@ export default function SignupPage() {
                     id="adminName"
                     name="adminName"
                     placeholder="John Doe"
-                    defaultValue={state.data.adminName}
+                    value={formData.adminName}
+                    onChange={handleInputChange("adminName")}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="adminContact">Admin Contact *</Label>
+                  <Label htmlFor="adminEmail">Admin Email *</Label>
                   <Input
-                    id="adminContact"
-                    name="adminContact"
-                    type="tel"
-                    placeholder="+91 9876543210"
-                    defaultValue={state.data.adminContact}
+                    id="adminEmail"
+                    name="adminEmail"
+                    type="email"
+                    placeholder="admin@company.com"
+                    value={formData.adminEmail}
+                    onChange={handleInputChange("adminEmail")}
                     required
                   />
                 </div>
@@ -195,7 +217,8 @@ export default function SignupPage() {
                     name="adminPassword"
                     type="password"
                     placeholder="Minimum 6 characters"
-                    defaultValue={state.data.adminPassword}
+                    value={formData.adminPassword}
+                    onChange={handleInputChange("adminPassword")}
                     minLength={6}
                     required
                   />
@@ -208,7 +231,8 @@ export default function SignupPage() {
                     name="confirmPassword"
                     type="password"
                     placeholder="Re-enter password"
-                    defaultValue={state.data.confirmPassword}
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange("confirmPassword")}
                     minLength={6}
                     required
                   />
@@ -216,12 +240,31 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {state.message && (
-              <div className="text-sm text-green-600">{state.message}</div>
+            {signupMutation.isSuccess && (
+              <div className="text-sm text-green-600">
+                Account created successfully! Redirecting to login...
+              </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? "Creating Account..." : "Create Firm Account"}
+            {signupMutation.isError && (
+              <div className="text-sm text-red-600">
+                {signupMutation.error?.message ||
+                  "Signup failed. Please try again."}
+              </div>
+            )}
+
+            {validationError && (
+              <div className="text-sm text-red-600">{validationError}</div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={signupMutation.isPending}
+            >
+              {signupMutation.isPending
+                ? "Creating Account..."
+                : "Create Firm Account"}
             </Button>
           </form>
 
