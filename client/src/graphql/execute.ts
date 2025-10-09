@@ -1,15 +1,21 @@
 import type { TypedDocumentString } from "./graphql";
 
+interface ExecuteOptions {
+  headers?: Record<string, string>;
+}
+
 export async function execute<TResult, TVariables>(
   query: TypedDocumentString<TResult, TVariables>,
-  ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
+  variables?: TVariables,
+  options?: ExecuteOptions
 ) {
-  console.log(query, "00");
+  console.log(query, "execute");
   const response = await fetch("http://localhost:4000/graphql", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/graphql-response+json",
+      ...options?.headers,
     },
     body: JSON.stringify({
       query: query,

@@ -1,16 +1,21 @@
 import { lazy, createElement } from "react";
 import type { RouteObject } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
+import { UserRole } from "@/graphql/graphql";
+
+// Import guard components immediately (not lazy) to prevent flickering
+import HomeGuard from "@/router/guards/HomeGuard";
+import RoleGuard from "@/router/guards/RoleGuard";
 
 // Lazy load page components
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const SignupPage = lazy(() => import("@/pages/SignupPage"));
-const DashboardPage = lazy(() => import("@/pages/dashboard/DashboardPage"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
 
-// Import components that need to be loaded immediately
+// Import layout components
 const RootLayout = lazy(() => import("@/layouts/RootLayout"));
-const AuthGuard = lazy(() => import("@/router/guards/AuthGuard"));
 const ErrorPage = lazy(() => import("@/pages/ErrorPage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
@@ -22,25 +27,34 @@ export const routes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: createElement(HomePage),
+        element: createElement(HomeGuard, {
+          children: createElement(HomePage),
+        }),
       },
       {
-        path: "auth",
-        children: [
-          {
-            path: "login",
-            element: createElement(LoginPage),
-          },
-          {
-            path: "signup",
-            element: createElement(SignupPage),
-          },
-        ],
+        path: ROUTES.AUTH.LOGIN,
+        element: createElement(HomeGuard, {
+          children: createElement(LoginPage),
+        }),
       },
       {
-        path: "dashboard",
-        element: createElement(AuthGuard, {
-          children: createElement(DashboardPage),
+        path: ROUTES.AUTH.SIGNUP,
+        element: createElement(HomeGuard, {
+          children: createElement(SignupPage),
+        }),
+      },
+      {
+        path: ROUTES.ADMIN_DASHBOARD,
+        element: createElement(RoleGuard, {
+          allowedRoles: UserRole.Admin,
+          children: createElement(AdminDashboard),
+        }),
+      },
+      {
+        path: ROUTES.STAFF_DASHBOARD,
+        element: createElement(RoleGuard, {
+          allowedRoles: UserRole.Staff,
+          children: createElement(StaffDashboard),
         }),
       },
       {

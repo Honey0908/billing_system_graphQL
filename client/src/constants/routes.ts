@@ -1,10 +1,11 @@
 export const ROUTES = {
   HOME: "/",
   AUTH: {
-    LOGIN: "/auth/login",
-    SIGNUP: "/auth/signup",
+    LOGIN: "/login",
+    SIGNUP: "/signup",
   },
-  DASHBOARD: "/dashboard",
+  ADMIN_DASHBOARD: "/admin-dashboard",
+  STAFF_DASHBOARD: "/staff-dashboard",
   NOT_FOUND: "/404",
 } as const;
 

@@ -15,9 +15,12 @@ import {
 import { execute } from "@/graphql/execute";
 import {
   LoginDocument,
+  UserRole,
   type LoginMutationVariables,
   type AuthResponse,
 } from "@/graphql/graphql";
+import { useAuthActions } from "@/hooks/useAuth";
+import { ROUTES } from "@/constants/routes";
 
 interface LoginFormData {
   email: string;
@@ -26,6 +29,7 @@ interface LoginFormData {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuthActions();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -36,12 +40,21 @@ export default function LoginPage() {
       const response = await execute(LoginDocument, variables);
       return response.data?.login as AuthResponse;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data?.token) {
-        // Store token in localStorage or context
-        localStorage.setItem("token", data.token);
-        // Redirect to dashboard or home page
-        navigate("/dashboard");
+        // Login and fetch user data
+        await login(data.token);
+
+        // Redirect based on user role from the login response
+        if (data.user?.role === UserRole.Admin) {
+          navigate(ROUTES.ADMIN_DASHBOARD);
+        } else if (data.user?.role === UserRole.Staff) {
+          navigate(ROUTES.STAFF_DASHBOARD);
+        } else {
+          // This should not happen if users only have ADMIN or STAFF roles
+          console.error("Unknown user role:", data.user?.role);
+          navigate(ROUTES.AUTH.LOGIN);
+        }
       }
     },
     onError: (error) => {
@@ -120,7 +133,7 @@ export default function LoginPage() {
               <div className="text-center text-sm">
                 Don't have an account?{" "}
                 <Link
-                  to="/auth/signup"
+                  to={ROUTES.AUTH.SIGNUP}
                   className="text-blue-600 hover:text-blue-500"
                 >
                   Sign up
