@@ -194,6 +194,21 @@ export enum UserRole {
   Staff = "STAFF",
 }
 
+export type CreateProductMutationVariables = Exact<{
+  input: ProductInput;
+}>;
+
+export type CreateProductMutation = {
+  __typename?: "Mutation";
+  createProduct: {
+    __typename?: "Product";
+    id: string;
+    name: string;
+    price: number;
+    createdAt: string;
+  };
+};
+
 export type SignUpFirmMutationVariables = Exact<{
   firmName: Scalars["String"]["input"];
   firmEmail: Scalars["String"]["input"];
@@ -224,6 +239,31 @@ export type SignUpFirmMutation = {
       phone: string;
     };
   };
+};
+
+export type UpdateProductMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+  input: ProductInput;
+}>;
+
+export type UpdateProductMutation = {
+  __typename?: "Mutation";
+  updateProduct: {
+    __typename?: "Product";
+    id: string;
+    name: string;
+    price: number;
+    createdAt: string;
+  };
+};
+
+export type DeleteProductMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type DeleteProductMutation = {
+  __typename?: "Mutation";
+  deleteProduct: boolean;
 };
 
 export type LoginMutationVariables = Exact<{
@@ -272,6 +312,35 @@ export type CreateUserMutation = {
   };
 };
 
+export type GetProductsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetProductsQuery = {
+  __typename?: "Query";
+  products: Array<{
+    __typename?: "Product";
+    id: string;
+    name: string;
+    price: number;
+    createdAt: string;
+  }>;
+};
+
+export type GetProductQueryVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type GetProductQuery = {
+  __typename?: "Query";
+  product?: {
+    __typename?: "Product";
+    id: string;
+    name: string;
+    price: number;
+    createdAt: string;
+    firm: { __typename?: "Firm"; id: string; name: string };
+  } | null;
+};
+
 export type GetMeQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetMeQuery = {
@@ -314,6 +383,19 @@ export class TypedDocumentString<TResult, TVariables>
   }
 }
 
+export const CreateProductDocument = new TypedDocumentString(`
+    mutation CreateProduct($input: ProductInput!) {
+  createProduct(input: $input) {
+    id
+    name
+    price
+    createdAt
+  }
+}
+    `) as unknown as TypedDocumentString<
+  CreateProductMutation,
+  CreateProductMutationVariables
+>;
 export const SignUpFirmDocument = new TypedDocumentString(`
     mutation SignUpFirm($firmName: String!, $firmEmail: String!, $firmAddress: String, $firmPhone: String, $adminEmail: String!, $adminPassword: String!, $adminName: String!) {
   signUpFirm(
@@ -343,6 +425,27 @@ export const SignUpFirmDocument = new TypedDocumentString(`
     `) as unknown as TypedDocumentString<
   SignUpFirmMutation,
   SignUpFirmMutationVariables
+>;
+export const UpdateProductDocument = new TypedDocumentString(`
+    mutation UpdateProduct($id: ID!, $input: ProductInput!) {
+  updateProduct(id: $id, input: $input) {
+    id
+    name
+    price
+    createdAt
+  }
+}
+    `) as unknown as TypedDocumentString<
+  UpdateProductMutation,
+  UpdateProductMutationVariables
+>;
+export const DeleteProductDocument = new TypedDocumentString(`
+    mutation DeleteProduct($id: ID!) {
+  deleteProduct(id: $id)
+}
+    `) as unknown as TypedDocumentString<
+  DeleteProductMutation,
+  DeleteProductMutationVariables
 >;
 export const LoginDocument = new TypedDocumentString(`
     mutation Login($email: String!, $password: String!) {
@@ -381,6 +484,36 @@ export const CreateUserDocument = new TypedDocumentString(`
     `) as unknown as TypedDocumentString<
   CreateUserMutation,
   CreateUserMutationVariables
+>;
+export const GetProductsDocument = new TypedDocumentString(`
+    query GetProducts {
+  products {
+    id
+    name
+    price
+    createdAt
+  }
+}
+    `) as unknown as TypedDocumentString<
+  GetProductsQuery,
+  GetProductsQueryVariables
+>;
+export const GetProductDocument = new TypedDocumentString(`
+    query GetProduct($id: ID!) {
+  product(id: $id) {
+    id
+    name
+    price
+    createdAt
+    firm {
+      id
+      name
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<
+  GetProductQuery,
+  GetProductQueryVariables
 >;
 export const GetMeDocument = new TypedDocumentString(`
     query GetMe {

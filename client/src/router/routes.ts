@@ -16,7 +16,6 @@ const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
 
 // Lazy load admin pages
 const ProductsPage = lazy(() => import("@/pages/admin/ProductsPage"));
-const ProductDetailPage = lazy(() => import("@/pages/admin/ProductDetailPage"));
 const MembersPage = lazy(() => import("@/pages/admin/MembersPage"));
 
 // Lazy load common pages
@@ -61,10 +60,6 @@ export const routes: RouteObject[] = [
           {
             path: "products",
             element: createElement(ProductsPage),
-          },
-          {
-            path: "products/:id",
-            element: createElement(ProductDetailPage),
           },
           {
             path: "members",

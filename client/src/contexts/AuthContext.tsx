@@ -83,15 +83,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Fetch user data with token
   const fetchUserData = async (token: string) => {
     try {
-      const response = await execute(
-        GetMeDocument,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Store token temporarily if not already in localStorage
+      // This handles the case during login when token is not yet stored
+      const existingToken = localStorage.getItem("token");
+      if (!existingToken) {
+        localStorage.setItem("token", token);
+      }
+
+      const response = await execute(GetMeDocument, {});
 
       if (response.data?.me) {
         // Type assertion since GetMeQuery returns a subset of User/Firm fields

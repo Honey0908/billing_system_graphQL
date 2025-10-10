@@ -75,17 +75,12 @@ export const Mutation = {
       email: string;
       password: string;
       role: 'ADMIN' | 'STAFF';
-      firmId: string;
     },
     context: Context
   ) {
-    const { name, email, password, role, firmId } = args;
+    const { name, email, password, role } = args;
 
     if (!context.user) throw new Error('Not authenticated');
-
-    if (context.user.firmId !== firmId) {
-      throw new Error('You can only create users in your own firm');
-    }
 
     const requestingUser = await prisma.user.findUnique({
       where: { id: context.user.userId },
@@ -106,7 +101,7 @@ export const Mutation = {
         email,
         password: hashedPassword,
         role,
-        firmId,
+        firmId: context?.user?.firmId,
       },
       include: { firm: true },
     });
