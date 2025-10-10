@@ -14,6 +14,14 @@ const SignupPage = lazy(() => import("@/pages/SignupPage"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
 
+// Lazy load admin pages
+const ProductsPage = lazy(() => import("@/pages/admin/ProductsPage"));
+const ProductDetailPage = lazy(() => import("@/pages/admin/ProductDetailPage"));
+const MembersPage = lazy(() => import("@/pages/admin/MembersPage"));
+
+// Lazy load common pages
+const BillsPage = lazy(() => import("@/pages/BillsPage"));
+
 // Import layout components
 const RootLayout = lazy(() => import("@/layouts/RootLayout"));
 const ErrorPage = lazy(() => import("@/pages/ErrorPage"));
@@ -49,6 +57,24 @@ export const routes: RouteObject[] = [
           allowedRoles: UserRole.Admin,
           children: createElement(AdminDashboard),
         }),
+        children: [
+          {
+            path: "products",
+            element: createElement(ProductsPage),
+          },
+          {
+            path: "products/:id",
+            element: createElement(ProductDetailPage),
+          },
+          {
+            path: "members",
+            element: createElement(MembersPage),
+          },
+          {
+            path: "bills",
+            element: createElement(BillsPage),
+          },
+        ],
       },
       {
         path: ROUTES.STAFF_DASHBOARD,
@@ -56,6 +82,12 @@ export const routes: RouteObject[] = [
           allowedRoles: UserRole.Staff,
           children: createElement(StaffDashboard),
         }),
+        children: [
+          {
+            path: "bills",
+            element: createElement(BillsPage),
+          },
+        ],
       },
       {
         path: "*",
