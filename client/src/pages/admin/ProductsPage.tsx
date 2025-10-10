@@ -161,7 +161,7 @@ export default function ProductsPage() {
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm">
-                    <span className="font-semibold">Price:</span> $
+                    <span className="font-semibold">Price:</span> ₹
                     {product.price.toFixed(2)}
                   </p>
                 </div>

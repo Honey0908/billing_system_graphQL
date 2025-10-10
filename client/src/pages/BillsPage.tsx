@@ -1,62 +1,111 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { LoadingPage } from "@/components/ui/loading";
+import { execute } from "@/graphql/execute";
+import { GET_PRODUCTS_QUERY } from "@/schema/queries/product";
+import { useBillItems } from "@/hooks/useBillItems";
+import { AddItemForm } from "@/components/bills/AddItemForm";
+import { BillItemsTable } from "@/components/bills/BillItemsTable";
 
 export default function BillsPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [customPrice, setCustomPrice] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<{
+    id: string;
+    name: string;
+    price: number;
+  } | null>(null);
+  const [isCustomProduct, setIsCustomProduct] = useState(false);
+
+  const { billItems, addItem, removeItem, clearAll, calculateTotal } =
+    useBillItems();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const response = await execute(GET_PRODUCTS_QUERY, {});
+      return response.data;
+    },
+  });
+
+  const products = data?.products || [];
+
+  const handleProductSelect = (product: {
+    id: string;
+    name: string;
+    price: number;
+  }) => {
+    setSelectedProduct(product);
+    setSearchTerm(product.name);
+    setCustomPrice(product.price.toString());
+    setIsCustomProduct(false);
+  };
+
+  const handleAddItem = () => {
+    const priceValue = parseFloat(customPrice);
+    const quantityValue = parseFloat(quantity);
+
+    if (
+      !searchTerm.trim() ||
+      !priceValue ||
+      priceValue <= 0 ||
+      !quantityValue ||
+      quantityValue <= 0
+    ) {
+      return;
+    }
+
+    const productId = isCustomProduct
+      ? `custom-${Date.now()}`
+      : selectedProduct?.id || "";
+
+    addItem(productId, searchTerm.trim(), priceValue, quantityValue);
+
+    // Reset form
+    setSearchTerm("");
+    setCustomPrice("");
+    setQuantity("");
+    setSelectedProduct(null);
+    setIsCustomProduct(false);
+  };
+
+  const isAddDisabled =
+    !searchTerm.trim() ||
+    !customPrice ||
+    parseFloat(customPrice) <= 0 ||
+    !quantity ||
+    parseFloat(quantity) <= 0;
+
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Add Bill</h1>
-          <p className="text-muted-foreground mt-1">
-            Create and manage bills for customers
-          </p>
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold mb-6">Create Bill</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bill Details</CardTitle>
-          <CardDescription>
-            Fill in the details to create a new bill (Coming Soon)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="text-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-10 w-10 text-primary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold">Bill Creation</h2>
-              <p className="text-muted-foreground max-w-md">
-                The bill creation form will be available here. You'll be able to
-                add products, calculate totals, and generate invoices.
-              </p>
-              <Button size="lg" className="mt-4">
-                Start Creating Bill
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <AddItemForm
+        products={products}
+        searchTerm={searchTerm}
+        customPrice={customPrice}
+        quantity={quantity}
+        isCustomProduct={isCustomProduct}
+        onSearchTermChange={setSearchTerm}
+        onCustomPriceChange={setCustomPrice}
+        onQuantityChange={setQuantity}
+        onProductSelect={handleProductSelect}
+        onCustomProduct={() => setIsCustomProduct(true)}
+        onAddItem={handleAddItem}
+        isAddDisabled={isAddDisabled}
+      />
+
+      <BillItemsTable
+        items={billItems}
+        onRemoveItem={removeItem}
+        onClearAll={clearAll}
+        grandTotal={calculateTotal()}
+      />
     </div>
   );
 }
