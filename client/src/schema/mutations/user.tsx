@@ -42,3 +42,13 @@ export const CREATE_USER_MUTATION = graphql(`
     }
   }
 `);
+
+export const DELETE_USER_MUTATION = graphql(`
+  mutation DeleteUser($id: ID!) {
+    deleteUser(id: $id) {
+      id
+      name
+      email
+    }
+  }
+`);

@@ -108,4 +108,39 @@ export const Mutation = {
 
     return excludePassword(user);
   },
+
+  //  Delete User Mutation
+  async deleteUser(_: unknown, args: { id: string }, context: Context) {
+    if (!context.user) throw new Error('Not authenticated');
+
+    const requestingUser = await prisma.user.findUnique({
+      where: { id: context.user.userId },
+    });
+
+    if (!requestingUser || requestingUser.role !== 'ADMIN') {
+      throw new Error('Only ADMIN can delete users');
+    }
+
+    // Prevent deleting self
+    if (args.id === context.user.userId) {
+      throw new Error('Cannot delete your own account');
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: args.id },
+    });
+
+    if (!user) throw new Error('User not found');
+
+    // Check if user belongs to the same firm
+    if (user.firmId !== context.user.firmId) {
+      throw new Error('Cannot delete users from other firms');
+    }
+
+    await prisma.user.delete({
+      where: { id: args.id },
+    });
+
+    return excludePassword(user);
+  },
 };

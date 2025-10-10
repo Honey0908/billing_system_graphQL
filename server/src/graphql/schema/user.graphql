@@ -27,6 +27,8 @@ extend type Mutation {
     firmId: ID!
   ): User!
 
+  deleteUser(id: ID!): User!
+
   login(email: String!, password: String!): AuthResponse!
 }
 

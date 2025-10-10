@@ -17,3 +17,14 @@ export const GET_ME_QUERY = graphql(`
     }
   }
 `);
+
+export const GET_USERS_QUERY = graphql(`
+  query GetUsers {
+    users {
+      id
+      name
+      email
+      role
+    }
+  }
+`);

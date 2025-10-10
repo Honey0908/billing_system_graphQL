@@ -90,6 +90,7 @@ export type Mutation = {
   createUser: User;
   deleteBill: Scalars["Boolean"]["output"];
   deleteProduct: Scalars["Boolean"]["output"];
+  deleteUser: User;
   login: AuthResponse;
   signUpFirm: AuthResponse;
   updateBill: Bill;
@@ -117,6 +118,10 @@ export type MutationDeleteBillArgs = {
 };
 
 export type MutationDeleteProductArgs = {
+  id: Scalars["ID"]["input"];
+};
+
+export type MutationDeleteUserArgs = {
   id: Scalars["ID"]["input"];
 };
 
@@ -194,21 +199,6 @@ export enum UserRole {
   Staff = "STAFF",
 }
 
-export type CreateProductMutationVariables = Exact<{
-  input: ProductInput;
-}>;
-
-export type CreateProductMutation = {
-  __typename?: "Mutation";
-  createProduct: {
-    __typename?: "Product";
-    id: string;
-    name: string;
-    price: number;
-    createdAt: string;
-  };
-};
-
 export type SignUpFirmMutationVariables = Exact<{
   firmName: Scalars["String"]["input"];
   firmEmail: Scalars["String"]["input"];
@@ -238,6 +228,21 @@ export type SignUpFirmMutation = {
       email: string;
       phone: string;
     };
+  };
+};
+
+export type CreateProductMutationVariables = Exact<{
+  input: ProductInput;
+}>;
+
+export type CreateProductMutation = {
+  __typename?: "Mutation";
+  createProduct: {
+    __typename?: "Product";
+    id: string;
+    name: string;
+    price: number;
+    createdAt: string;
   };
 };
 
@@ -312,6 +317,15 @@ export type CreateUserMutation = {
   };
 };
 
+export type DeleteUserMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type DeleteUserMutation = {
+  __typename?: "Mutation";
+  deleteUser: { __typename?: "User"; id: string; name: string; email: string };
+};
+
 export type GetProductsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetProductsQuery = {
@@ -362,6 +376,19 @@ export type GetMeQuery = {
   } | null;
 };
 
+export type GetUsersQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetUsersQuery = {
+  __typename?: "Query";
+  users: Array<{
+    __typename?: "User";
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+  }>;
+};
+
 export class TypedDocumentString<TResult, TVariables>
   extends String
   implements DocumentTypeDecoration<TResult, TVariables>
@@ -383,19 +410,6 @@ export class TypedDocumentString<TResult, TVariables>
   }
 }
 
-export const CreateProductDocument = new TypedDocumentString(`
-    mutation CreateProduct($input: ProductInput!) {
-  createProduct(input: $input) {
-    id
-    name
-    price
-    createdAt
-  }
-}
-    `) as unknown as TypedDocumentString<
-  CreateProductMutation,
-  CreateProductMutationVariables
->;
 export const SignUpFirmDocument = new TypedDocumentString(`
     mutation SignUpFirm($firmName: String!, $firmEmail: String!, $firmAddress: String, $firmPhone: String, $adminEmail: String!, $adminPassword: String!, $adminName: String!) {
   signUpFirm(
@@ -425,6 +439,19 @@ export const SignUpFirmDocument = new TypedDocumentString(`
     `) as unknown as TypedDocumentString<
   SignUpFirmMutation,
   SignUpFirmMutationVariables
+>;
+export const CreateProductDocument = new TypedDocumentString(`
+    mutation CreateProduct($input: ProductInput!) {
+  createProduct(input: $input) {
+    id
+    name
+    price
+    createdAt
+  }
+}
+    `) as unknown as TypedDocumentString<
+  CreateProductMutation,
+  CreateProductMutationVariables
 >;
 export const UpdateProductDocument = new TypedDocumentString(`
     mutation UpdateProduct($id: ID!, $input: ProductInput!) {
@@ -485,6 +512,18 @@ export const CreateUserDocument = new TypedDocumentString(`
   CreateUserMutation,
   CreateUserMutationVariables
 >;
+export const DeleteUserDocument = new TypedDocumentString(`
+    mutation DeleteUser($id: ID!) {
+  deleteUser(id: $id) {
+    id
+    name
+    email
+  }
+}
+    `) as unknown as TypedDocumentString<
+  DeleteUserMutation,
+  DeleteUserMutationVariables
+>;
 export const GetProductsDocument = new TypedDocumentString(`
     query GetProducts {
   products {
@@ -532,3 +571,13 @@ export const GetMeDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetMeQuery, GetMeQueryVariables>;
+export const GetUsersDocument = new TypedDocumentString(`
+    query GetUsers {
+  users {
+    id
+    name
+    email
+    role
+  }
+}
+    `) as unknown as TypedDocumentString<GetUsersQuery, GetUsersQueryVariables>;
