@@ -15,6 +15,7 @@ interface AddItemFormProps {
   customPrice: string;
   quantity: string;
   isCustomProduct: boolean;
+  isInventoryProduct: boolean; // New prop to track if product is from inventory
   onSearchTermChange: (value: string) => void;
   onCustomPriceChange: (value: string) => void;
   onQuantityChange: (value: string) => void;
@@ -30,6 +31,7 @@ export function AddItemForm({
   customPrice,
   quantity,
   isCustomProduct,
+  isInventoryProduct,
   onSearchTermChange,
   onCustomPriceChange,
   onQuantityChange,
@@ -80,6 +82,13 @@ export function AddItemForm({
         <Plus className="h-5 w-5 mr-2" />
         Add Item
       </Button>
+
+      {isInventoryProduct && (
+        <p className="text-sm text-muted-foreground">
+          📦 Inventory product - Default: ₹{customPrice}/kg (editable for custom
+          pricing)
+        </p>
+      )}
 
       {isCustomProduct && searchTerm && (
         <p className="text-sm text-muted-foreground">

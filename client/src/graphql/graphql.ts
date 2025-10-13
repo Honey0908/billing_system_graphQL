@@ -54,13 +54,16 @@ export type BillItem = {
   __typename?: "BillItem";
   id: Scalars["ID"]["output"];
   price: Scalars["Float"]["output"];
-  product: Product;
+  product?: Maybe<Product>;
+  productName?: Maybe<Scalars["String"]["output"]>;
   quantity: Scalars["Int"]["output"];
   total: Scalars["Float"]["output"];
 };
 
 export type BillItemInput = {
-  productId: Scalars["ID"]["input"];
+  price?: InputMaybe<Scalars["Float"]["input"]>;
+  productId?: InputMaybe<Scalars["ID"]["input"]>;
+  productName?: InputMaybe<Scalars["String"]["input"]>;
   quantity: Scalars["Int"]["input"];
 };
 
@@ -221,12 +224,13 @@ export type CreateBillMutation = {
       quantity: number;
       price: number;
       total: number;
-      product: {
+      productName?: string | null;
+      product?: {
         __typename?: "Product";
         id: string;
         name: string;
         price: number;
-      };
+      } | null;
     }>;
   };
 };
@@ -254,12 +258,13 @@ export type UpdateBillMutation = {
       quantity: number;
       price: number;
       total: number;
-      product: {
+      productName?: string | null;
+      product?: {
         __typename?: "Product";
         id: string;
         name: string;
         price: number;
-      };
+      } | null;
     }>;
   };
 };
@@ -420,12 +425,13 @@ export type GetBillsQuery = {
       quantity: number;
       price: number;
       total: number;
-      product: {
+      productName?: string | null;
+      product?: {
         __typename?: "Product";
         id: string;
         name: string;
         price: number;
-      };
+      } | null;
     }>;
   }>;
 };
@@ -450,12 +456,13 @@ export type GetMyBillsQuery = {
       quantity: number;
       price: number;
       total: number;
-      product: {
+      productName?: string | null;
+      product?: {
         __typename?: "Product";
         id: string;
         name: string;
         price: number;
-      };
+      } | null;
     }>;
   }>;
 };
@@ -482,12 +489,13 @@ export type GetBillQuery = {
       quantity: number;
       price: number;
       total: number;
-      product: {
+      productName?: string | null;
+      product?: {
         __typename?: "Product";
         id: string;
         name: string;
         price: number;
-      };
+      } | null;
     }>;
   } | null;
 };
@@ -599,6 +607,7 @@ export const CreateBillDocument = new TypedDocumentString(`
       quantity
       price
       total
+      productName
       product {
         id
         name
@@ -634,6 +643,7 @@ export const UpdateBillDocument = new TypedDocumentString(`
       quantity
       price
       total
+      productName
       product {
         id
         name
@@ -791,6 +801,7 @@ export const GetBillsDocument = new TypedDocumentString(`
       quantity
       price
       total
+      productName
       product {
         id
         name
@@ -823,6 +834,7 @@ export const GetMyBillsDocument = new TypedDocumentString(`
       quantity
       price
       total
+      productName
       product {
         id
         name
@@ -858,6 +870,7 @@ export const GetBillDocument = new TypedDocumentString(`
       quantity
       price
       total
+      productName
       product {
         id
         name

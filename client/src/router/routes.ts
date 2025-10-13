@@ -17,6 +17,16 @@ const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
 // Lazy load admin pages
 const ProductsPage = lazy(() => import("@/pages/admin/ProductsPage"));
 const MembersPage = lazy(() => import("@/pages/admin/MembersPage"));
+const BillsListPage = lazy(() => import("@/pages/admin/BillsListPage"));
+const BillDetailPage = lazy(() => import("@/pages/admin/BillDetailPage"));
+
+// Lazy load staff pages
+const StaffBillsListPage = lazy(
+  () => import("@/pages/staff/StaffBillsListPage")
+);
+const StaffBillDetailPage = lazy(
+  () => import("@/pages/staff/StaffBillDetailPage")
+);
 
 // Lazy load common pages
 const BillsPage = lazy(() => import("@/pages/BillsPage"));
@@ -67,7 +77,15 @@ export const routes: RouteObject[] = [
           },
           {
             path: "bills",
+            element: createElement(BillsListPage),
+          },
+          {
+            path: "bills/create",
             element: createElement(BillsPage),
+          },
+          {
+            path: "bills/:id",
+            element: createElement(BillDetailPage),
           },
         ],
       },
@@ -80,7 +98,15 @@ export const routes: RouteObject[] = [
         children: [
           {
             path: "bills",
+            element: createElement(StaffBillsListPage),
+          },
+          {
+            path: "bills/create",
             element: createElement(BillsPage),
+          },
+          {
+            path: "bills/:id",
+            element: createElement(StaffBillDetailPage),
           },
         ],
       },

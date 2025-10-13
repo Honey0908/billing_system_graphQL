@@ -2,7 +2,9 @@ import prisma from '../../config/database.js';
 import { Context } from '../../context.js';
 
 interface BillItemInput {
-  productId: string;
+  productId?: string;
+  productName?: string;
+  price?: number;
   quantity: number;
 }
 
@@ -95,32 +97,27 @@ export const Mutation = {
       throw new Error('Bill must have at least one item');
     }
 
-    // Validate that all products exist and belong to the user's firm
-    const productIds = items.map((item) => item.productId);
-    const products = await prisma.product.findMany({
-      where: {
-        id: { in: productIds },
-        firmId: context.user.firmId,
-      },
-    });
-
-    if (products.length !== productIds.length) {
-      throw new Error('Some products not found or not accessible');
+    // Validate all items have productName and price
+    for (const item of items) {
+      if (!item.productName || item.productName.trim() === '') {
+        throw new Error('All items must have a product name');
+      }
+      if (!item.price || item.price <= 0) {
+        throw new Error('All items must have a valid price');
+      }
     }
 
-    // Calculate total amount
+    // Calculate total amount and prepare bill items
     let totalAmount = 0;
     const billItemsData = items.map((item) => {
-      const product = products.find((p) => p.id === item.productId);
-      if (!product) throw new Error(`Product ${item.productId} not found`);
-
-      const itemTotal = product.price * item.quantity;
+      const itemTotal = item.price! * item.quantity;
       totalAmount += itemTotal;
 
       return {
-        productId: item.productId,
+        productId: item.productId || undefined,
+        productName: item.productName,
         quantity: item.quantity,
-        price: product.price,
+        price: item.price!,
         total: itemTotal,
       };
     });
@@ -183,32 +180,27 @@ export const Mutation = {
       throw new Error('Bill must have at least one item');
     }
 
-    // Validate products
-    const productIds = items.map((item) => item.productId);
-    const products = await prisma.product.findMany({
-      where: {
-        id: { in: productIds },
-        firmId: context.user.firmId,
-      },
-    });
-
-    if (products.length !== productIds.length) {
-      throw new Error('Some products not found or not accessible');
+    // Validate all items have productName and price
+    for (const item of items) {
+      if (!item.productName || item.productName.trim() === '') {
+        throw new Error('All items must have a product name');
+      }
+      if (!item.price || item.price <= 0) {
+        throw new Error('All items must have a valid price');
+      }
     }
 
-    // Calculate new total
+    // Calculate new total and prepare bill items
     let totalAmount = 0;
     const billItemsData = items.map((item) => {
-      const product = products.find((p) => p.id === item.productId);
-      if (!product) throw new Error(`Product ${item.productId} not found`);
-
-      const itemTotal = product.price * item.quantity;
+      const itemTotal = item.price! * item.quantity;
       totalAmount += itemTotal;
 
       return {
-        productId: item.productId,
+        productId: item.productId || undefined,
+        productName: item.productName,
         quantity: item.quantity,
-        price: product.price,
+        price: item.price!,
         total: itemTotal,
       };
     });

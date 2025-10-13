@@ -50,7 +50,18 @@ export default function StaffDashboard() {
                 className="rounded-none border-b-2 border-transparent data-[active=true]:border-primary"
                 data-active={isActive(ROUTES.STAFF.BILLS)}
               >
-                Bills
+                My Bills
+              </Button>
+            </Link>
+            <Link to={ROUTES.STAFF.BILLS_CREATE}>
+              <Button
+                variant={
+                  isActive(ROUTES.STAFF.BILLS_CREATE) ? "default" : "ghost"
+                }
+                className="rounded-none border-b-2 border-transparent data-[active=true]:border-primary"
+                data-active={isActive(ROUTES.STAFF.BILLS_CREATE)}
+              >
+                Create Bill
               </Button>
             </Link>
           </div>
@@ -86,10 +97,19 @@ export default function StaffDashboard() {
               </div>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
               <Link
                 to={ROUTES.STAFF.BILLS}
-                className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow block"
+                className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow"
+              >
+                <h3 className="text-xl font-semibold mb-2">View My Bills</h3>
+                <p className="text-muted-foreground">
+                  See all bills you've created
+                </p>
+              </Link>
+              <Link
+                to={ROUTES.STAFF.BILLS_CREATE}
+                className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow"
               >
                 <h3 className="text-xl font-semibold mb-2">Create New Bill</h3>
                 <p className="text-muted-foreground">

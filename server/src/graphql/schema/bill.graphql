@@ -14,14 +14,17 @@ type Bill {
 
 type BillItem {
   id: ID!
-  product: Product!
+  product: Product
+  productName: String!
   quantity: Int!
   price: Float!
   total: Float!
 }
 
 input BillItemInput {
-  productId: ID!
+  productId: ID
+  productName: String!
+  price: Float
   quantity: Int!
 }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { LoadingPage } from "@/components/ui/loading";
 import { execute } from "@/graphql/execute";
 import { GET_PRODUCTS_QUERY } from "@/schema/queries/product";
@@ -10,8 +10,11 @@ import { BillItemsTable } from "@/components/bills/BillItemsTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { BillItemInput } from "@/graphql/graphql";
 
 export default function BillsPage() {
+  const queryClient = useQueryClient();
+
   const [step, setStep] = useState<1 | 2>(1); // Step 1: Add products, Step 2: Customer info
   const [searchTerm, setSearchTerm] = useState("");
   const [customPrice, setCustomPrice] = useState("");
@@ -42,13 +45,17 @@ export default function BillsPage() {
         title: string;
         customerName?: string;
         customerPhone?: string;
-        items: { productId: string; quantity: number }[];
+        items: BillItemInput[];
       };
     }) => {
       const response = await execute(CREATE_BILL_MUTATION, variables);
       return response.data;
     },
     onSuccess: () => {
+      // Invalidate bills queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
+      queryClient.invalidateQueries({ queryKey: ["myBills"] });
+
       // Reset form
       setCustomerName("");
       setCustomerPhone("");
@@ -96,9 +103,11 @@ export default function BillsPage() {
       return;
     }
 
-    const productId = isCustomProduct
-      ? `custom-${Date.now()}`
-      : selectedProduct?.id || "";
+    // Determine if this is an inventory product or custom product
+    const isInventoryProduct = selectedProduct && !isCustomProduct;
+    const productId = isInventoryProduct
+      ? selectedProduct.id
+      : `custom-${Date.now()}`;
 
     addItem(productId, searchTerm.trim(), priceValue, quantityValue);
 
@@ -116,19 +125,18 @@ export default function BillsPage() {
       return;
     }
 
-    const items = billItems
-      .filter((item) => !item.productId.startsWith("custom-"))
-      .map((item) => ({
-        productId: item.productId,
-        quantity: item.quantity,
-      }));
+    const items: BillItemInput[] = billItems.map((item) => {
+      // Check if this is a custom product (no productId, or productId starts with "custom-")
+      const isCustomProduct =
+        !item.productId || item.productId.startsWith("custom-");
 
-    if (items.length === 0) {
-      alert(
-        "Cannot create bill with only custom products. Please add products from the inventory."
-      );
-      return;
-    }
+      return {
+        productId: isCustomProduct ? undefined : item.productId,
+        productName: item.productName,
+        price: item.price,
+        quantity: item.quantity,
+      };
+    });
 
     // Generate bill title automatically with timestamp
     const billTitle = `Bill-${new Date().getTime()}`;
@@ -186,6 +194,7 @@ export default function BillsPage() {
             customPrice={customPrice}
             quantity={quantity}
             isCustomProduct={isCustomProduct}
+            isInventoryProduct={!!selectedProduct && !isCustomProduct}
             onSearchTermChange={handleSearchTermChange}
             onCustomPriceChange={setCustomPrice}
             onQuantityChange={setQuantity}

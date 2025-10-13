@@ -23,6 +23,7 @@ export const CREATE_BILL_MUTATION = graphql(`
         quantity
         price
         total
+        productName
         product {
           id
           name
@@ -56,6 +57,7 @@ export const UPDATE_BILL_MUTATION = graphql(`
         quantity
         price
         total
+        productName
         product {
           id
           name

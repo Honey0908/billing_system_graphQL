@@ -23,6 +23,7 @@ export const GET_BILLS_QUERY = graphql(`
         quantity
         price
         total
+        productName
         product {
           id
           name
@@ -56,6 +57,7 @@ export const GET_MY_BILLS_QUERY = graphql(`
         quantity
         price
         total
+        productName
         product {
           id
           name
@@ -89,6 +91,7 @@ export const GET_BILL_QUERY = graphql(`
         quantity
         price
         total
+        productName
         product {
           id
           name

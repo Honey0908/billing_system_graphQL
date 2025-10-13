@@ -71,6 +71,17 @@ export default function AdminDashboard() {
                 Bills
               </Button>
             </Link>
+            <Link to={ROUTES.ADMIN.BILLS_CREATE}>
+              <Button
+                variant={
+                  isActive(ROUTES.ADMIN.BILLS_CREATE) ? "default" : "ghost"
+                }
+                className="rounded-none border-b-2 border-transparent data-[active=true]:border-primary"
+                data-active={isActive(ROUTES.ADMIN.BILLS_CREATE)}
+              >
+                Create Bill
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>
@@ -104,7 +115,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
               <Link
                 to={ROUTES.ADMIN.PRODUCTS}
                 className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow"
@@ -121,6 +132,15 @@ export default function AdminDashboard() {
                 <h3 className="text-xl font-semibold mb-2">Manage Members</h3>
                 <p className="text-muted-foreground">
                   Add and manage your firm's team members
+                </p>
+              </Link>
+              <Link
+                to={ROUTES.ADMIN.BILLS_CREATE}
+                className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow"
+              >
+                <h3 className="text-xl font-semibold mb-2">Create New Bill</h3>
+                <p className="text-muted-foreground">
+                  Start creating a new bill for a customer
                 </p>
               </Link>
             </div>
