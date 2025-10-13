@@ -6,6 +6,7 @@ import { execute } from "@/graphql/execute";
 import { GetMeDocument } from "@/graphql/graphql";
 
 // Types
+
 interface AuthState {
   user: User | null;
   firm: Firm | null;

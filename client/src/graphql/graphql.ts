@@ -55,7 +55,7 @@ export type BillItem = {
   id: Scalars["ID"]["output"];
   price: Scalars["Float"]["output"];
   product?: Maybe<Product>;
-  productName?: Maybe<Scalars["String"]["output"]>;
+  productName: Scalars["String"]["output"];
   quantity: Scalars["Int"]["output"];
   total: Scalars["Float"]["output"];
 };
@@ -63,7 +63,7 @@ export type BillItem = {
 export type BillItemInput = {
   price?: InputMaybe<Scalars["Float"]["input"]>;
   productId?: InputMaybe<Scalars["ID"]["input"]>;
-  productName?: InputMaybe<Scalars["String"]["input"]>;
+  productName: Scalars["String"]["input"];
   quantity: Scalars["Int"]["input"];
 };
 
@@ -83,6 +83,14 @@ export type Firm = {
   name: Scalars["String"]["output"];
   phone: Scalars["String"]["output"];
   users: Array<User>;
+};
+
+export type MonthlyStats = {
+  __typename?: "MonthlyStats";
+  billsCount: Scalars["Int"]["output"];
+  month: Scalars["Int"]["output"];
+  totalAmount: Scalars["Float"]["output"];
+  year: Scalars["Int"]["output"];
 };
 
 export type Mutation = {
@@ -173,7 +181,9 @@ export type Query = {
   bill?: Maybe<Bill>;
   bills: Array<Bill>;
   me?: Maybe<User>;
+  monthlyStats: MonthlyStats;
   myBills: Array<Bill>;
+  myMonthlyStats: MonthlyStats;
   product?: Maybe<Product>;
   products: Array<Product>;
   users: Array<User>;
@@ -181,6 +191,16 @@ export type Query = {
 
 export type QueryBillArgs = {
   id: Scalars["ID"]["input"];
+};
+
+export type QueryMonthlyStatsArgs = {
+  month: Scalars["Int"]["input"];
+  year: Scalars["Int"]["input"];
+};
+
+export type QueryMyMonthlyStatsArgs = {
+  month: Scalars["Int"]["input"];
+  year: Scalars["Int"]["input"];
 };
 
 export type QueryProductArgs = {
@@ -224,7 +244,7 @@ export type CreateBillMutation = {
       quantity: number;
       price: number;
       total: number;
-      productName?: string | null;
+      productName: string;
       product?: {
         __typename?: "Product";
         id: string;
@@ -258,7 +278,7 @@ export type UpdateBillMutation = {
       quantity: number;
       price: number;
       total: number;
-      productName?: string | null;
+      productName: string;
       product?: {
         __typename?: "Product";
         id: string;
@@ -425,7 +445,7 @@ export type GetBillsQuery = {
       quantity: number;
       price: number;
       total: number;
-      productName?: string | null;
+      productName: string;
       product?: {
         __typename?: "Product";
         id: string;
@@ -456,7 +476,7 @@ export type GetMyBillsQuery = {
       quantity: number;
       price: number;
       total: number;
-      productName?: string | null;
+      productName: string;
       product?: {
         __typename?: "Product";
         id: string;
@@ -489,7 +509,7 @@ export type GetBillQuery = {
       quantity: number;
       price: number;
       total: number;
-      productName?: string | null;
+      productName: string;
       product?: {
         __typename?: "Product";
         id: string;
@@ -498,6 +518,38 @@ export type GetBillQuery = {
       } | null;
     }>;
   } | null;
+};
+
+export type GetMonthlyStatsQueryVariables = Exact<{
+  month: Scalars["Int"]["input"];
+  year: Scalars["Int"]["input"];
+}>;
+
+export type GetMonthlyStatsQuery = {
+  __typename?: "Query";
+  monthlyStats: {
+    __typename?: "MonthlyStats";
+    month: number;
+    year: number;
+    billsCount: number;
+    totalAmount: number;
+  };
+};
+
+export type GetMyMonthlyStatsQueryVariables = Exact<{
+  month: Scalars["Int"]["input"];
+  year: Scalars["Int"]["input"];
+}>;
+
+export type GetMyMonthlyStatsQuery = {
+  __typename?: "Query";
+  myMonthlyStats: {
+    __typename?: "MonthlyStats";
+    month: number;
+    year: number;
+    billsCount: number;
+    totalAmount: number;
+  };
 };
 
 export type GetProductsQueryVariables = Exact<{ [key: string]: never }>;
@@ -880,6 +932,32 @@ export const GetBillDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetBillQuery, GetBillQueryVariables>;
+export const GetMonthlyStatsDocument = new TypedDocumentString(`
+    query GetMonthlyStats($month: Int!, $year: Int!) {
+  monthlyStats(month: $month, year: $year) {
+    month
+    year
+    billsCount
+    totalAmount
+  }
+}
+    `) as unknown as TypedDocumentString<
+  GetMonthlyStatsQuery,
+  GetMonthlyStatsQueryVariables
+>;
+export const GetMyMonthlyStatsDocument = new TypedDocumentString(`
+    query GetMyMonthlyStats($month: Int!, $year: Int!) {
+  myMonthlyStats(month: $month, year: $year) {
+    month
+    year
+    billsCount
+    totalAmount
+  }
+}
+    `) as unknown as TypedDocumentString<
+  GetMyMonthlyStatsQuery,
+  GetMyMonthlyStatsQueryVariables
+>;
 export const GetProductsDocument = new TypedDocumentString(`
     query GetProducts {
   products {

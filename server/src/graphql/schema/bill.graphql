@@ -21,6 +21,13 @@ type BillItem {
   total: Float!
 }
 
+type MonthlyStats {
+  month: Int!
+  year: Int!
+  billsCount: Int!
+  totalAmount: Float!
+}
+
 input BillItemInput {
   productId: ID
   productName: String!
@@ -39,6 +46,8 @@ extend type Query {
   bills: [Bill!]!
   bill(id: ID!): Bill
   myBills: [Bill!]!
+  monthlyStats(month: Int!, year: Int!): MonthlyStats!
+  myMonthlyStats(month: Int!, year: Int!): MonthlyStats!
 }
 
 extend type Mutation {

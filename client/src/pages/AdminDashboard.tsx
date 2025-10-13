@@ -1,12 +1,49 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/hooks/useAuth";
+import { execute } from "@/graphql/execute";
+import {
+  GET_BILLS_QUERY,
+  GET_MONTHLY_STATS_QUERY,
+} from "@/schema/queries/bill";
 
 export default function AdminDashboard() {
   const location = useLocation();
   const { user, firm, logout } = useAuth();
   const isRootDashboard = location.pathname === ROUTES.ADMIN_DASHBOARD;
+
+  // Get current month and year
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1; // getMonth() returns 0-11, API expects 1-12
+  const currentYear = now.getFullYear();
+
+  // Fetch monthly statistics from backend
+  const { data: monthlyStatsData } = useQuery({
+    queryKey: ["monthlyStats", currentMonth, currentYear],
+    queryFn: async () => {
+      const response = await execute(GET_MONTHLY_STATS_QUERY, {
+        month: currentMonth,
+        year: currentYear,
+      });
+      return response;
+    },
+  });
+
+  // Fetch all bills for total count
+  const { data: billsData } = useQuery({
+    queryKey: ["bills"],
+    queryFn: async () => {
+      const response = await execute(GET_BILLS_QUERY, {});
+      return response;
+    },
+  });
+
+  const monthlyStats = {
+    count: monthlyStatsData?.data?.monthlyStats?.billsCount ?? 0,
+    total: monthlyStatsData?.data?.monthlyStats?.totalAmount ?? 0,
+  };
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -93,24 +130,33 @@ export default function AdminDashboard() {
             <h2 className="text-3xl font-bold mb-6">Dashboard Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow">
-                <h3 className="text-lg font-semibold mb-2">Total Products</h3>
-                <p className="text-3xl font-bold text-primary">24</p>
+                <h3 className="text-lg font-semibold mb-2">Bills This Month</h3>
+                <p className="text-3xl font-bold text-primary">
+                  {monthlyStats.count}
+                </p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Active products in inventory
+                  Total bills created this month
                 </p>
               </div>
               <div className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow">
-                <h3 className="text-lg font-semibold mb-2">Team Members</h3>
-                <p className="text-3xl font-bold text-primary">12</p>
+                <h3 className="text-lg font-semibold mb-2">Monthly Revenue</h3>
+                <p className="text-3xl font-bold text-primary">
+                  ₹
+                  {monthlyStats.total.toLocaleString("en-IN", {
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Active staff members
+                  Total sales this month
                 </p>
               </div>
               <div className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow">
-                <h3 className="text-lg font-semibold mb-2">Total Sales</h3>
-                <p className="text-3xl font-bold text-primary">$45,678</p>
+                <h3 className="text-lg font-semibold mb-2">Total Bills</h3>
+                <p className="text-3xl font-bold text-primary">
+                  {billsData?.data?.bills.length ?? 0}
+                </p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Revenue this month
+                  All time bills created
                 </p>
               </div>
             </div>

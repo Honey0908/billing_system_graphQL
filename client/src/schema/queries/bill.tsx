@@ -101,3 +101,25 @@ export const GET_BILL_QUERY = graphql(`
     }
   }
 `);
+
+export const GET_MONTHLY_STATS_QUERY = graphql(`
+  query GetMonthlyStats($month: Int!, $year: Int!) {
+    monthlyStats(month: $month, year: $year) {
+      month
+      year
+      billsCount
+      totalAmount
+    }
+  }
+`);
+
+export const GET_MY_MONTHLY_STATS_QUERY = graphql(`
+  query GetMyMonthlyStats($month: Int!, $year: Int!) {
+    myMonthlyStats(month: $month, year: $year) {
+      month
+      year
+      billsCount
+      totalAmount
+    }
+  }
+`);

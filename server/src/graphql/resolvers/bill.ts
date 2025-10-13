@@ -81,6 +81,105 @@ export const Query = {
       orderBy: { createdAt: 'desc' },
     });
   },
+
+  async monthlyStats(
+    _: unknown,
+    args: { month: number; year: number },
+    context: Context
+  ) {
+    if (!context.user) throw new Error('Not authenticated');
+
+    const requestingUser = await prisma.user.findUnique({
+      where: { id: context.user.userId },
+    });
+
+    if (!requestingUser || requestingUser.role !== 'ADMIN') {
+      throw new Error('Only ADMIN can view firm statistics');
+    }
+
+    const { month, year } = args;
+
+    // Validate month (1-12) and year
+    if (month < 1 || month > 12) {
+      throw new Error('Month must be between 1 and 12');
+    }
+    if (year < 2000 || year > 2100) {
+      throw new Error('Invalid year');
+    }
+
+    // Calculate start and end dates for the month
+    const startDate = new Date(year, month - 1, 1); // month is 0-indexed in Date
+    const endDate = new Date(year, month, 1); // First day of next month
+
+    const bills = await prisma.bill.findMany({
+      where: {
+        firmId: context.user.firmId,
+        createdAt: {
+          gte: startDate,
+          lt: endDate,
+        },
+      },
+      select: {
+        totalAmount: true,
+      },
+    });
+
+    const billsCount = bills.length;
+    const totalAmount = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
+
+    return {
+      month,
+      year,
+      billsCount,
+      totalAmount,
+    };
+  },
+
+  async myMonthlyStats(
+    _: unknown,
+    args: { month: number; year: number },
+    context: Context
+  ) {
+    if (!context.user) throw new Error('Not authenticated');
+
+    const { month, year } = args;
+
+    // Validate month (1-12) and year
+    if (month < 1 || month > 12) {
+      throw new Error('Month must be between 1 and 12');
+    }
+    if (year < 2000 || year > 2100) {
+      throw new Error('Invalid year');
+    }
+
+    // Calculate start and end dates for the month
+    const startDate = new Date(year, month - 1, 1); // month is 0-indexed in Date
+    const endDate = new Date(year, month, 1); // First day of next month
+
+    const bills = await prisma.bill.findMany({
+      where: {
+        userId: context.user.userId,
+        firmId: context.user.firmId,
+        createdAt: {
+          gte: startDate,
+          lt: endDate,
+        },
+      },
+      select: {
+        totalAmount: true,
+      },
+    });
+
+    const billsCount = bills.length;
+    const totalAmount = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
+
+    return {
+      month,
+      year,
+      billsCount,
+      totalAmount,
+    };
+  },
 };
 
 export const Mutation = {

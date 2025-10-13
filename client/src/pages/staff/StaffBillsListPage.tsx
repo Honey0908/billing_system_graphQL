@@ -3,20 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { execute } from "@/graphql/execute";
 import { GET_MY_BILLS_QUERY } from "@/schema/queries/bill";
+import { GetMyBillsQuery } from "@/graphql/graphql";
 import { LoadingPage } from "@/components/ui/loading";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Eye } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
-
-interface Bill {
-  id: string;
-  title: string;
-  customerName?: string | null;
-  customerPhone?: string | null;
-  totalAmount: number;
-  createdAt: string;
-}
 
 export default function StaffBillsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,11 +17,12 @@ export default function StaffBillsListPage() {
     queryKey: ["myBills"],
     queryFn: async () => {
       const response = await execute(GET_MY_BILLS_QUERY, {});
-      return response.data;
+      return response;
     },
+    refetchOnMount: "always", // Always refetch when component mounts
   });
 
-  const bills: Bill[] = data?.myBills || [];
+  const bills: GetMyBillsQuery["myBills"] = data?.data?.myBills || [];
 
   // Filter bills by ID or customer name
   const filteredBills = bills.filter((bill) => {

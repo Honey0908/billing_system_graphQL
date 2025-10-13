@@ -8,36 +8,31 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Eye } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
-
-interface Bill {
-  id: string;
-  title: string;
-  customerName?: string | null;
-  customerPhone?: string | null;
-  totalAmount: number;
-  createdAt: string;
-}
+import type { GetBillsQuery } from "@/graphql/graphql";
 
 export default function BillsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<GetBillsQuery>({
     queryKey: ["bills"],
     queryFn: async () => {
       const response = await execute(GET_BILLS_QUERY, {});
       return response.data;
     },
+    refetchOnMount: "always", // Always refetch when component mounts
   });
 
-  const bills: Bill[] = data?.bills || [];
+  const bills = data?.bills || [];
 
-  // Filter bills by ID or customer name
+  // Filter bills by ID, customer name, phone, or creator name
   const filteredBills = bills.filter((bill) => {
     const query = searchQuery.toLowerCase();
     return (
       bill.id.toLowerCase().includes(query) ||
       bill.customerName?.toLowerCase().includes(query) ||
-      bill.customerPhone?.includes(query)
+      bill.customerPhone?.includes(query) ||
+      bill.user.name.toLowerCase().includes(query) ||
+      bill.user.email.toLowerCase().includes(query)
     );
   });
 
@@ -59,7 +54,7 @@ export default function BillsListPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Search by Bill ID, Customer Name, or Phone..."
+          placeholder="Search by Bill ID, Customer, Phone, or Staff Name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 h-12"
@@ -79,6 +74,9 @@ export default function BillsListPage() {
                 <th className="text-left py-3 px-4 font-semibold">
                   Phone Number
                 </th>
+                <th className="text-left py-3 px-4 font-semibold">
+                  Created By
+                </th>
                 <th className="text-left py-3 px-4 font-semibold">Date</th>
                 <th className="text-right py-3 px-4 font-semibold">Amount</th>
                 <th className="text-center py-3 px-4 font-semibold">Action</th>
@@ -88,7 +86,7 @@ export default function BillsListPage() {
               {filteredBills.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-8 text-muted-foreground"
                   >
                     {searchQuery
@@ -118,6 +116,14 @@ export default function BillsListPage() {
                           N/A
                         </span>
                       )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{bill.user.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {bill.user.email}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       {new Date(bill.createdAt).toLocaleDateString("en-US", {
