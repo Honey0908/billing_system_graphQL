@@ -199,6 +199,80 @@ export enum UserRole {
   Staff = "STAFF",
 }
 
+export type CreateBillMutationVariables = Exact<{
+  input: CreateBillInput;
+}>;
+
+export type CreateBillMutation = {
+  __typename?: "Mutation";
+  createBill: {
+    __typename?: "Bill";
+    id: string;
+    title: string;
+    createdAt: string;
+    totalAmount: number;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    user: { __typename?: "User"; id: string; email: string; name: string };
+    firm: { __typename?: "Firm"; id: string; name: string };
+    items: Array<{
+      __typename?: "BillItem";
+      id: string;
+      quantity: number;
+      price: number;
+      total: number;
+      product: {
+        __typename?: "Product";
+        id: string;
+        name: string;
+        price: number;
+      };
+    }>;
+  };
+};
+
+export type UpdateBillMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+  input: CreateBillInput;
+}>;
+
+export type UpdateBillMutation = {
+  __typename?: "Mutation";
+  updateBill: {
+    __typename?: "Bill";
+    id: string;
+    title: string;
+    createdAt: string;
+    totalAmount: number;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    user: { __typename?: "User"; id: string; email: string; name: string };
+    firm: { __typename?: "Firm"; id: string; name: string };
+    items: Array<{
+      __typename?: "BillItem";
+      id: string;
+      quantity: number;
+      price: number;
+      total: number;
+      product: {
+        __typename?: "Product";
+        id: string;
+        name: string;
+        price: number;
+      };
+    }>;
+  };
+};
+
+export type DeleteBillMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type DeleteBillMutation = {
+  __typename?: "Mutation";
+  deleteBill: boolean;
+};
+
 export type SignUpFirmMutationVariables = Exact<{
   firmName: Scalars["String"]["input"];
   firmEmail: Scalars["String"]["input"];
@@ -326,6 +400,98 @@ export type DeleteUserMutation = {
   deleteUser: { __typename?: "User"; id: string; name: string; email: string };
 };
 
+export type GetBillsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetBillsQuery = {
+  __typename?: "Query";
+  bills: Array<{
+    __typename?: "Bill";
+    id: string;
+    title: string;
+    createdAt: string;
+    totalAmount: number;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    user: { __typename?: "User"; id: string; email: string; name: string };
+    firm: { __typename?: "Firm"; id: string; name: string };
+    items: Array<{
+      __typename?: "BillItem";
+      id: string;
+      quantity: number;
+      price: number;
+      total: number;
+      product: {
+        __typename?: "Product";
+        id: string;
+        name: string;
+        price: number;
+      };
+    }>;
+  }>;
+};
+
+export type GetMyBillsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetMyBillsQuery = {
+  __typename?: "Query";
+  myBills: Array<{
+    __typename?: "Bill";
+    id: string;
+    title: string;
+    createdAt: string;
+    totalAmount: number;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    user: { __typename?: "User"; id: string; email: string; name: string };
+    firm: { __typename?: "Firm"; id: string; name: string };
+    items: Array<{
+      __typename?: "BillItem";
+      id: string;
+      quantity: number;
+      price: number;
+      total: number;
+      product: {
+        __typename?: "Product";
+        id: string;
+        name: string;
+        price: number;
+      };
+    }>;
+  }>;
+};
+
+export type GetBillQueryVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type GetBillQuery = {
+  __typename?: "Query";
+  bill?: {
+    __typename?: "Bill";
+    id: string;
+    title: string;
+    createdAt: string;
+    totalAmount: number;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    user: { __typename?: "User"; id: string; email: string; name: string };
+    firm: { __typename?: "Firm"; id: string; name: string };
+    items: Array<{
+      __typename?: "BillItem";
+      id: string;
+      quantity: number;
+      price: number;
+      total: number;
+      product: {
+        __typename?: "Product";
+        id: string;
+        name: string;
+        price: number;
+      };
+    }>;
+  } | null;
+};
+
 export type GetProductsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetProductsQuery = {
@@ -410,6 +576,84 @@ export class TypedDocumentString<TResult, TVariables>
   }
 }
 
+export const CreateBillDocument = new TypedDocumentString(`
+    mutation CreateBill($input: CreateBillInput!) {
+  createBill(input: $input) {
+    id
+    title
+    createdAt
+    totalAmount
+    customerName
+    customerPhone
+    user {
+      id
+      email
+      name
+    }
+    firm {
+      id
+      name
+    }
+    items {
+      id
+      quantity
+      price
+      total
+      product {
+        id
+        name
+        price
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<
+  CreateBillMutation,
+  CreateBillMutationVariables
+>;
+export const UpdateBillDocument = new TypedDocumentString(`
+    mutation UpdateBill($id: ID!, $input: CreateBillInput!) {
+  updateBill(id: $id, input: $input) {
+    id
+    title
+    createdAt
+    totalAmount
+    customerName
+    customerPhone
+    user {
+      id
+      email
+      name
+    }
+    firm {
+      id
+      name
+    }
+    items {
+      id
+      quantity
+      price
+      total
+      product {
+        id
+        name
+        price
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<
+  UpdateBillMutation,
+  UpdateBillMutationVariables
+>;
+export const DeleteBillDocument = new TypedDocumentString(`
+    mutation DeleteBill($id: ID!) {
+  deleteBill(id: $id)
+}
+    `) as unknown as TypedDocumentString<
+  DeleteBillMutation,
+  DeleteBillMutationVariables
+>;
 export const SignUpFirmDocument = new TypedDocumentString(`
     mutation SignUpFirm($firmName: String!, $firmEmail: String!, $firmAddress: String, $firmPhone: String, $adminEmail: String!, $adminPassword: String!, $adminName: String!) {
   signUpFirm(
@@ -524,6 +768,105 @@ export const DeleteUserDocument = new TypedDocumentString(`
   DeleteUserMutation,
   DeleteUserMutationVariables
 >;
+export const GetBillsDocument = new TypedDocumentString(`
+    query GetBills {
+  bills {
+    id
+    title
+    createdAt
+    totalAmount
+    customerName
+    customerPhone
+    user {
+      id
+      email
+      name
+    }
+    firm {
+      id
+      name
+    }
+    items {
+      id
+      quantity
+      price
+      total
+      product {
+        id
+        name
+        price
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<GetBillsQuery, GetBillsQueryVariables>;
+export const GetMyBillsDocument = new TypedDocumentString(`
+    query GetMyBills {
+  myBills {
+    id
+    title
+    createdAt
+    totalAmount
+    customerName
+    customerPhone
+    user {
+      id
+      email
+      name
+    }
+    firm {
+      id
+      name
+    }
+    items {
+      id
+      quantity
+      price
+      total
+      product {
+        id
+        name
+        price
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<
+  GetMyBillsQuery,
+  GetMyBillsQueryVariables
+>;
+export const GetBillDocument = new TypedDocumentString(`
+    query GetBill($id: ID!) {
+  bill(id: $id) {
+    id
+    title
+    createdAt
+    totalAmount
+    customerName
+    customerPhone
+    user {
+      id
+      email
+      name
+    }
+    firm {
+      id
+      name
+    }
+    items {
+      id
+      quantity
+      price
+      total
+      product {
+        id
+        name
+        price
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<GetBillQuery, GetBillQueryVariables>;
 export const GetProductsDocument = new TypedDocumentString(`
     query GetProducts {
   products {

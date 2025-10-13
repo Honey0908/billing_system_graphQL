@@ -1,8 +1,6 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ProductSearchInput } from "./ProductSearchInput";
 
 interface Product {
@@ -41,61 +39,53 @@ export function AddItemForm({
   isAddDisabled,
 }: AddItemFormProps) {
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="flex gap-4 items-end flex-wrap">
-          <ProductSearchInput
-            products={products}
-            value={searchTerm}
-            onValueChange={onSearchTermChange}
-            onProductSelect={onProductSelect}
-            onCustomProduct={onCustomProduct}
-          />
+    <div className="mb-6 space-y-3">
+      <ProductSearchInput
+        products={products}
+        value={searchTerm}
+        onValueChange={onSearchTermChange}
+        onProductSelect={onProductSelect}
+        onCustomProduct={onCustomProduct}
+      />
 
-          <div className="w-32">
-            <Label htmlFor="custom-price">Price/kg (₹)</Label>
-            <Input
-              id="custom-price"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={customPrice}
-              onChange={(e) => onCustomPriceChange(e.target.value)}
-            />
-          </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Input
+          id="custom-price"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="Price/kg (₹)"
+          value={customPrice}
+          onChange={(e) => onCustomPriceChange(e.target.value)}
+          className="h-12 text-base"
+        />
 
-          <div className="w-32">
-            <Label htmlFor="quantity">Quantity (kg)</Label>
-            <Input
-              id="quantity"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={quantity}
-              onChange={(e) => onQuantityChange(e.target.value)}
-            />
-          </div>
+        <Input
+          id="quantity"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="Quantity (kg)"
+          value={quantity}
+          onChange={(e) => onQuantityChange(e.target.value)}
+          className="h-12 text-base"
+        />
+      </div>
 
-          <Button
-            onClick={onAddItem}
-            disabled={isAddDisabled}
-            size="icon"
-            className="shrink-0"
-            title="Add Item"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+      <Button
+        onClick={onAddItem}
+        disabled={isAddDisabled}
+        className="w-full h-12 text-base"
+      >
+        <Plus className="h-5 w-5 mr-2" />
+        Add Item
+      </Button>
 
-        {isCustomProduct && searchTerm && (
-          <p className="text-sm text-muted-foreground mt-2">
-            💡 Adding custom product:{" "}
-            <span className="font-medium">{searchTerm}</span>
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      {isCustomProduct && searchTerm && (
+        <p className="text-sm text-muted-foreground">
+          💡 Custom product: <span className="font-medium">{searchTerm}</span>
+        </p>
+      )}
+    </div>
   );
 }

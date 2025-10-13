@@ -87,14 +87,6 @@ export function BillItemsTable({
             ₹{grandTotal.toFixed(2)}
           </span>
         </div>
-
-        {items.length > 0 && (
-          <div className="flex justify-end mt-4">
-            <Button size="lg" className="px-8">
-              Generate Bill
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

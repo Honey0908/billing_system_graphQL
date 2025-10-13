@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 interface Product {
   id: string;
@@ -47,7 +46,13 @@ export function ProductSearchInput({
   const handleChange = (newValue: string) => {
     onValueChange(newValue);
     setShowDropdown(true);
-    onCustomProduct();
+    // Only mark as custom if no matching products exist
+    const hasMatch = products.some((p) =>
+      p.name.toLowerCase().includes(newValue.toLowerCase())
+    );
+    if (!hasMatch && newValue.trim()) {
+      onCustomProduct();
+    }
   };
 
   const handleSelect = (product: Product) => {
@@ -56,14 +61,14 @@ export function ProductSearchInput({
   };
 
   return (
-    <div className="flex-1 min-w-[200px] relative" ref={dropdownRef}>
-      <Label htmlFor="product-search">Product Name</Label>
+    <div className="relative" ref={dropdownRef}>
       <Input
         id="product-search"
-        placeholder="Search or enter product name..."
+        placeholder="Search product..."
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         onFocus={() => setShowDropdown(true)}
+        className="h-12 text-base"
       />
 
       {showDropdown && value && filteredProducts.length > 0 && (
@@ -72,7 +77,7 @@ export function ProductSearchInput({
             <button
               key={product.id}
               type="button"
-              className="w-full px-4 py-2 text-left hover:bg-accent hover:text-accent-foreground transition-colors flex justify-between items-center"
+              className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground transition-colors flex justify-between items-center text-base"
               onClick={() => handleSelect(product)}
             >
               <span>{product.name}</span>
@@ -89,7 +94,7 @@ export function ProductSearchInput({
           <div className="px-4 py-3 text-sm">
             <span className="text-muted-foreground">No products found. </span>
             <span className="text-primary font-medium">
-              Enter custom price to add.
+              Enter price to add custom.
             </span>
           </div>
         </div>
