@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { execute } from "@/graphql/execute";
 import { GET_MY_BILLS_QUERY } from "@/schema/queries/bill";
-import { GetMyBillsQuery } from "@/graphql/graphql";
+import type { GetMyBillsQuery } from "@/graphql/graphql";
 import { LoadingPage } from "@/components/ui/loading";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
