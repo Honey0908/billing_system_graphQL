@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { execute } from "@/graphql/execute";
-import { GET_BILL_QUERY } from "@/schema/queries/bill";
+import { useQuery } from "@apollo/client/react";
+import { GET_BILL } from "@/graphql/queries";
 import { LoadingPage } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,14 +10,13 @@ export default function BillDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["bill", id],
-    queryFn: async () => {
-      if (!id) throw new Error("Bill ID is required");
-      const response = await execute(GET_BILL_QUERY, { id });
-      return response.data;
-    },
-    enabled: !!id,
+  const {
+    data,
+    loading: isLoading,
+    error,
+  } = useQuery(GET_BILL, {
+    variables: { id: id || "" },
+    skip: !id,
   });
 
   if (isLoading) {

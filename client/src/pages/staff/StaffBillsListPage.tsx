@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@apollo/client/react";
 import { Link } from "react-router-dom";
-import { execute } from "@/graphql/execute";
-import { GET_MY_BILLS_QUERY } from "@/schema/queries/bill";
-import type { GetMyBillsQuery } from "@/graphql/graphql";
+import { GET_MY_BILLS } from "@/graphql/queries";
 import { LoadingPage } from "@/components/ui/loading";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,16 +11,9 @@ import { ROUTES } from "@/constants/routes";
 export default function StaffBillsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["myBills"],
-    queryFn: async () => {
-      const response = await execute(GET_MY_BILLS_QUERY, {});
-      return response;
-    },
-    refetchOnMount: "always", // Always refetch when component mounts
-  });
+  const { data, loading: isLoading } = useQuery(GET_MY_BILLS);
 
-  const bills: GetMyBillsQuery["myBills"] = data?.data?.myBills || [];
+  const bills = data?.myBills || [];
 
   // Filter bills by ID or customer name
   const filteredBills = bills.filter((bill) => {

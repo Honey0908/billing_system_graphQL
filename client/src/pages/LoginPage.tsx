@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from "@apollo/client/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,15 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { execute } from "@/graphql/execute";
-import {
-  LoginDocument,
-  UserRole,
-  type LoginMutationVariables,
-  type AuthResponse,
-} from "@/graphql/graphql";
+import { UserRole } from "@/graphql/graphql";
 import { useAuthActions } from "@/hooks/useAuth";
 import { ROUTES } from "@/constants/routes";
+import { LOGIN } from "@/graphql/mutations";
 
 interface LoginFormData {
   email: string;
@@ -35,24 +30,20 @@ export default function LoginPage() {
     password: "",
   });
 
-  const loginMutation = useMutation({
-    mutationFn: async (variables: LoginMutationVariables) => {
-      const response = await execute(LoginDocument, variables);
-      return response.data?.login as AuthResponse;
-    },
-    onSuccess: async (data) => {
-      if (data?.token) {
+  const [loginMutation, { loading, error }] = useMutation(LOGIN, {
+    onCompleted: async (data) => {
+      if (data?.login?.token) {
         // Login and fetch user data
-        await login(data.token);
+        await login(data.login.token);
 
         // Redirect based on user role from the login response
-        if (data.user?.role === UserRole.Admin) {
+        if (data.login.user?.role === UserRole.Admin) {
           navigate(ROUTES.ADMIN_DASHBOARD);
-        } else if (data.user?.role === UserRole.Staff) {
+        } else if (data.login.user?.role === UserRole.Staff) {
           navigate(ROUTES.STAFF_DASHBOARD);
         } else {
           // This should not happen if users only have ADMIN or STAFF roles
-          console.error("Unknown user role:", data.user?.role);
+          console.error("Unknown user role:", data.login.user?.role);
           navigate(ROUTES.AUTH.LOGIN);
         }
       }
@@ -69,9 +60,11 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation.mutate({
-      email: formData.email,
-      password: formData.password,
+    loginMutation({
+      variables: {
+        email: formData.email,
+        password: formData.password,
+      },
     });
   };
 
@@ -89,10 +82,9 @@ export default function LoginPage() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-              {loginMutation.error && (
+              {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {loginMutation.error.message ||
-                    "Login failed. Please try again."}
+                  {error.message || "Login failed. Please try again."}
                 </div>
               )}
 
@@ -123,12 +115,8 @@ export default function LoginPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4 pt-6">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loginMutation.isPending}
-              >
-                {loginMutation.isPending ? "Signing in..." : "Sign in"}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Signing in..." : "Sign in"}
               </Button>
               <div className="text-center text-sm">
                 Don't have an account?{" "}

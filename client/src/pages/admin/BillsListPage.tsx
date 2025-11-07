@@ -1,26 +1,17 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@apollo/client/react";
 import { Link } from "react-router-dom";
-import { execute } from "@/graphql/execute";
-import { GET_BILLS_QUERY } from "@/schema/queries/bill";
+import { GET_BILLS } from "@/graphql/queries";
 import { LoadingPage } from "@/components/ui/loading";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Eye } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
-import type { GetBillsQuery } from "@/graphql/graphql";
 
 export default function BillsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading } = useQuery<GetBillsQuery>({
-    queryKey: ["bills"],
-    queryFn: async () => {
-      const response = await execute(GET_BILLS_QUERY, {});
-      return response.data;
-    },
-    refetchOnMount: "always", // Always refetch when component mounts
-  });
+  const { data, loading: isLoading } = useQuery(GET_BILLS);
 
   const bills = data?.bills || [];
 

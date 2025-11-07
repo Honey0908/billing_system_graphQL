@@ -1,5 +1,5 @@
 import { useActionState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from "@apollo/client/react";
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { execute } from "@/graphql/execute";
-import { CREATE_USER_MUTATION } from "@/schema/mutations/user";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/graphql/graphql";
+import { CREATE_USER } from "@/graphql/mutations";
 
 interface AddMemberModalProps {
   open: boolean;
@@ -33,18 +32,7 @@ export function AddMemberModal({
   const { user } = useAuth();
   const firmId = user?.firm?.id;
 
-  const { mutateAsync: createUser, isPending } = useMutation({
-    mutationFn: async (variables: {
-      name: string;
-      email: string;
-      password: string;
-      role: UserRole;
-      firmId: string;
-    }) => {
-      const response = await execute(CREATE_USER_MUTATION, variables);
-      return response.data;
-    },
-  });
+  const [createUserMutation, { loading }] = useMutation(CREATE_USER);
 
   async function handleSubmit(
     _prevState: FormState,
@@ -65,7 +53,10 @@ export function AddMemberModal({
     }
 
     try {
-      await createUser({ name, email, password, role, firmId });
+      await createUserMutation({
+        variables: { name, email, password, role, firmId },
+        refetchQueries: ["GetUsers"],
+      });
       onSuccess();
       return { success: true };
     } catch (error) {
@@ -119,8 +110,8 @@ export function AddMemberModal({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Adding..." : "Add Member"}
+            <Button type="submit" disabled={loading}>
+              {loading ? "Adding..." : "Add Member"}
             </Button>
           </div>
         </form>

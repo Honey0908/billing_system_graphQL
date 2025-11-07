@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from "@apollo/client/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,12 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { execute } from "@/graphql/execute";
-import {
-  SignUpFirmDocument,
-  type SignUpFirmMutationVariables,
-  type AuthResponse,
-} from "@/graphql/graphql";
+import { SIGNUP_FIRM } from "@/graphql/mutations";
 
 interface SignupFormData {
   firmName: string;
@@ -43,13 +38,9 @@ export default function SignupPage() {
     confirmPassword: "",
   });
 
-  const signupMutation = useMutation({
-    mutationFn: async (variables: SignUpFirmMutationVariables) => {
-      const response = await execute(SignUpFirmDocument, variables);
-      return response.data?.signUpFirm as AuthResponse;
-    },
-    onSuccess: (data) => {
-      if (data?.user) {
+  const [signupMutation, { loading, error }] = useMutation(SIGNUP_FIRM, {
+    onCompleted: (data) => {
+      if (data?.signUpFirm?.user) {
         navigate("/login");
       }
     },
@@ -71,14 +62,16 @@ export default function SignupPage() {
       return;
     }
 
-    signupMutation.mutate({
-      firmName: formData.firmName,
-      firmEmail: formData.firmEmail,
-      firmAddress: formData.firmAddress,
-      firmPhone: formData.firmContact,
-      adminEmail: formData.adminEmail,
-      adminName: formData.adminName,
-      adminPassword: formData.password,
+    signupMutation({
+      variables: {
+        firmName: formData.firmName,
+        firmEmail: formData.firmEmail,
+        firmAddress: formData.firmAddress,
+        firmPhone: formData.firmContact,
+        adminEmail: formData.adminEmail,
+        adminName: formData.adminName,
+        adminPassword: formData.password,
+      },
     });
   };
 
@@ -96,10 +89,9 @@ export default function SignupPage() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-              {signupMutation.error && (
+              {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {signupMutation.error.message ||
-                    "Signup failed. Please try again."}
+                  {error.message || "Signup failed. Please try again."}
                 </div>
               )}
 
@@ -208,14 +200,8 @@ export default function SignupPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4 pt-6">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={signupMutation.isPending}
-              >
-                {signupMutation.isPending
-                  ? "Creating account..."
-                  : "Create account"}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Creating account..." : "Create account"}
               </Button>
               <div className="text-center text-sm">
                 Already have an account?{" "}

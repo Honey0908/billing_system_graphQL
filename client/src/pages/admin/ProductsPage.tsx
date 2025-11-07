@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { gql } from "@apollo/client/core";
+import { useQuery } from "@apollo/client/react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,10 +11,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { LoadingPage } from "@/components/ui/loading";
-import { execute } from "@/graphql/execute";
-import { GET_PRODUCTS_QUERY } from "@/schema/queries/product";
 import ProductModal from "@/components/products/AddProductModal";
 import DeleteProductModal from "@/components/products/DeleteProductModal";
+
+const GET_PRODUCTS = gql`
+  query GetProducts {
+    products {
+      id
+      name
+      price
+      createdAt
+    }
+  }
+`;
 
 export default function ProductsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -26,15 +36,17 @@ export default function ProductsPage() {
     id: string;
     name: string;
   } | null>(null);
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => {
-      const response = await execute(GET_PRODUCTS_QUERY, {});
-      return response.data;
-    },
-  });
 
-  if (isLoading) {
+  const { data, loading, error } = useQuery<{
+    products: Array<{
+      id: string;
+      name: string;
+      price: number;
+      createdAt: string;
+    }>;
+  }>(GET_PRODUCTS);
+
+  if (loading) {
     return <LoadingPage />;
   }
 
@@ -45,9 +57,7 @@ export default function ProductsPage() {
           <h2 className="text-2xl font-bold text-destructive mb-2">
             Error Loading Products
           </h2>
-          <p className="text-muted-foreground">
-            {error instanceof Error ? error.message : "An error occurred"}
-          </p>
+          <p className="text-muted-foreground">{error.message}</p>
         </div>
       </div>
     );

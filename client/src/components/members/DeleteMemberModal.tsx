@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from "@apollo/client/react";
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { execute } from "@/graphql/execute";
-import { DELETE_USER_MUTATION } from "@/schema/mutations/user";
+import { DELETE_USER } from "@/graphql/mutations";
 import { useState } from "react";
 
 interface DeleteMemberModalProps {
@@ -27,20 +26,15 @@ export function DeleteMemberModal({
 }: DeleteMemberModalProps) {
   const [error, setError] = useState("");
 
-  const { mutate: deleteUser, isPending } = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await execute(DELETE_USER_MUTATION, { id });
-      return response.data;
-    },
-    onSuccess: () => {
+  const [deleteUser, { loading }] = useMutation(DELETE_USER, {
+    onCompleted: () => {
       setError("");
       onSuccess();
     },
     onError: (error) => {
-      setError(
-        error instanceof Error ? error.message : "Failed to delete member"
-      );
+      setError(error.message || "Failed to delete member");
     },
+    refetchQueries: ["GetUsers"],
   });
 
   if (!user) return null;
@@ -62,10 +56,10 @@ export function DeleteMemberModal({
           </Button>
           <Button
             variant="destructive"
-            onClick={() => deleteUser(user.id)}
-            disabled={isPending}
+            onClick={() => deleteUser({ variables: { id: user.id } })}
+            disabled={loading}
           >
-            {isPending ? "Deleting..." : "Delete"}
+            {loading ? "Deleting..." : "Delete"}
           </Button>
         </DialogFooter>
       </DialogContent>

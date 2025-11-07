@@ -1,9 +1,9 @@
 import { createContext, useReducer, useEffect } from "react";
 import type { ReactNode } from "react";
+import { apolloClient } from "@/graphql/apolloClient";
 import { UserRole } from "@/graphql/graphql";
 import type { User, Firm } from "@/graphql/graphql";
-import { execute } from "@/graphql/execute";
-import { GetMeDocument } from "@/graphql/graphql";
+import { GET_ME } from "@/graphql/queries";
 
 // Types
 
@@ -91,12 +91,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.setItem("token", token);
       }
 
-      const response = await execute(GetMeDocument, {});
+      const { data } = await apolloClient.query({
+        query: GET_ME,
+        fetchPolicy: "network-only",
+      });
 
-      if (response.data?.me) {
-        // Type assertion since GetMeQuery returns a subset of User/Firm fields
-        const user = response.data.me as User;
-        const firm = response.data.me.firm as Firm;
+      if (data?.me) {
+        const user = data.me as User;
+        const firm = data.me.firm as Firm;
         dispatch({ type: "SET_USER_DATA", payload: { user, firm } });
       } else {
         throw new Error("No user data returned");

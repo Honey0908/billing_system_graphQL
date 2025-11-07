@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@apollo/client/react";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { execute } from "@/graphql/execute";
-import { DELETE_PRODUCT_MUTATION } from "@/schema/mutations/product";
+import { DELETE_PRODUCT } from "@/graphql/mutations";
 
 interface DeleteProductModalProps {
   open: boolean;
@@ -26,38 +25,28 @@ export default function DeleteProductModal({
   onOpenChange,
   product,
 }: DeleteProductModalProps) {
-  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
-  const deleteProductMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await execute(DELETE_PRODUCT_MUTATION, { id });
-      return response.data;
-    },
-    onSuccess: () => {
-      // Invalidate and refetch products query
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+  const [deleteProduct, { loading }] = useMutation(DELETE_PRODUCT, {
+    onCompleted: () => {
       setError(null);
       onOpenChange(false);
     },
     onError: (err) => {
       console.error("Failed to delete product:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to delete product. Please try again."
-      );
+      setError(err.message || "Failed to delete product. Please try again.");
     },
+    refetchQueries: ["GetProducts"],
   });
 
   const handleDelete = () => {
     if (product) {
-      deleteProductMutation.mutate(product.id);
+      deleteProduct({ variables: { id: product.id } });
     }
   };
 
   const handleClose = () => {
-    if (!deleteProductMutation.isPending) {
+    if (!loading) {
       setError(null);
       onOpenChange(false);
     }
@@ -93,7 +82,7 @@ export default function DeleteProductModal({
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={deleteProductMutation.isPending}
+            disabled={loading}
           >
             Cancel
           </Button>
@@ -101,9 +90,9 @@ export default function DeleteProductModal({
             type="button"
             variant="destructive"
             onClick={handleDelete}
-            disabled={deleteProductMutation.isPending}
+            disabled={loading}
           >
-            {deleteProductMutation.isPending ? "Deleting..." : "Delete"}
+            {loading ? "Deleting..." : "Delete"}
           </Button>
         </DialogFooter>
       </DialogContent>

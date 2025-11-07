@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { LoadingPage } from "@/components/ui/loading";
-import { execute } from "@/graphql/execute";
-import { GET_PRODUCTS_QUERY } from "@/schema/queries/product";
-import { CREATE_BILL_MUTATION } from "@/schema/mutations/bill";
+import { GET_PRODUCTS } from "@/graphql/queries";
+import { CREATE_BILL } from "@/graphql/mutations";
 import { useBillItems } from "@/hooks/useBillItems";
 import { AddItemForm } from "@/components/bills/AddItemForm";
 import { BillItemsTable } from "@/components/bills/BillItemsTable";
@@ -13,8 +12,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { BillItemInput } from "@/graphql/graphql";
 
 export default function BillsPage() {
-  const queryClient = useQueryClient();
-
   const [step, setStep] = useState<1 | 2>(1); // Step 1: Add products, Step 2: Customer info
   const [searchTerm, setSearchTerm] = useState("");
   const [customPrice, setCustomPrice] = useState("");
@@ -31,42 +28,25 @@ export default function BillsPage() {
   const { billItems, addItem, removeItem, clearAll, calculateTotal } =
     useBillItems();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => {
-      const response = await execute(GET_PRODUCTS_QUERY, {});
-      return response.data;
-    },
-  });
+  const { data, loading: isLoading } = useQuery(GET_PRODUCTS);
 
-  const createBillMutation = useMutation({
-    mutationFn: async (variables: {
-      input: {
-        title: string;
-        customerName?: string;
-        customerPhone?: string;
-        items: BillItemInput[];
-      };
-    }) => {
-      const response = await execute(CREATE_BILL_MUTATION, variables);
-      return response.data;
-    },
-    onSuccess: () => {
-      // Invalidate bills queries to refresh the list
-      queryClient.invalidateQueries({ queryKey: ["bills"] });
-      queryClient.invalidateQueries({ queryKey: ["myBills"] });
-
-      // Reset form
-      setCustomerName("");
-      setCustomerPhone("");
-      clearAll();
-      setStep(1); // Go back to step 1
-      alert("Bill created successfully!");
-    },
-    onError: (error: Error) => {
-      alert(`Error creating bill: ${error.message}`);
-    },
-  });
+  const [createBillMutation, { loading: isCreating }] = useMutation(
+    CREATE_BILL,
+    {
+      onCompleted: () => {
+        // Reset form
+        setCustomerName("");
+        setCustomerPhone("");
+        clearAll();
+        setStep(1); // Go back to step 1
+        alert("Bill created successfully!");
+      },
+      onError: (error) => {
+        alert(`Error creating bill: ${error.message}`);
+      },
+      refetchQueries: ["GetBills", "GetMyBills"],
+    }
+  );
 
   const products = data?.products || [];
 
@@ -141,12 +121,14 @@ export default function BillsPage() {
     // Generate bill title automatically with timestamp
     const billTitle = `Bill-${new Date().getTime()}`;
 
-    createBillMutation.mutate({
-      input: {
-        title: billTitle,
-        customerName: customerName.trim() || undefined,
-        customerPhone: customerPhone.trim() || undefined,
-        items,
+    createBillMutation({
+      variables: {
+        input: {
+          title: billTitle,
+          customerName: customerName.trim() || undefined,
+          customerPhone: customerPhone.trim() || undefined,
+          items,
+        },
       },
     });
   };
@@ -263,16 +245,16 @@ export default function BillsPage() {
           <div className="space-y-3">
             <Button
               onClick={handleCreateBill}
-              disabled={createBillMutation.isPending || billItems.length === 0}
+              disabled={isCreating || billItems.length === 0}
               className="w-full h-12 text-base"
             >
-              {createBillMutation.isPending ? "Creating..." : "Create Bill"}
+              {isCreating ? "Creating..." : "Create Bill"}
             </Button>
             <Button
               onClick={handleBackToProducts}
               variant="outline"
               className="w-full h-12 text-base"
-              disabled={createBillMutation.isPending}
+              disabled={isCreating}
             >
               <ChevronLeft className="mr-2 h-5 w-5" />
               Back

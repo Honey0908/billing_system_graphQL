@@ -1,5 +1,5 @@
 import { useActionState, useRef, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@apollo/client/react";
 import {
   Dialog,
   DialogContent,
@@ -10,11 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { execute } from "@/graphql/execute";
-import {
-  CREATE_PRODUCT_MUTATION,
-  UPDATE_PRODUCT_MUTATION,
-} from "@/schema/mutations/product";
+import { CREATE_PRODUCT, UPDATE_PRODUCT } from "@/graphql/mutations";
 
 interface ProductModalProps {
   open: boolean;
@@ -40,9 +36,16 @@ export default function ProductModal({
   onOpenChange,
   product = null,
 }: ProductModalProps) {
-  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
   const isEditMode = !!product;
+
+  const [createProduct] = useMutation(CREATE_PRODUCT, {
+    refetchQueries: ["GetProducts"],
+  });
+
+  const [updateProduct] = useMutation(UPDATE_PRODUCT, {
+    refetchQueries: ["GetProducts"],
+  });
 
   // React 19 useActionState hook for form handling
   const [state, formAction, isPending] = useActionState<FormState, FormData>(
@@ -70,24 +73,25 @@ export default function ProductModal({
       // Submit to API
       try {
         if (isEditMode) {
-          await execute(UPDATE_PRODUCT_MUTATION, {
-            id: product.id,
-            input: {
-              name: name.trim(),
-              price: parseFloat(price),
+          await updateProduct({
+            variables: {
+              id: product.id,
+              input: {
+                name: name.trim(),
+                price: parseFloat(price),
+              },
             },
           });
         } else {
-          await execute(CREATE_PRODUCT_MUTATION, {
-            input: {
-              name: name.trim(),
-              price: parseFloat(price),
+          await createProduct({
+            variables: {
+              input: {
+                name: name.trim(),
+                price: parseFloat(price),
+              },
             },
           });
         }
-
-        // Invalidate and refetch products query
-        queryClient.invalidateQueries({ queryKey: ["products"] });
 
         return { success: true };
       } catch (error) {

@@ -1,18 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ApolloProvider } from "@apollo/client/react";
 import App from "./App.tsx";
 import "./index.css";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-    },
-  },
-});
+import { apolloClient } from "./graphql/apolloClient.ts";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -21,10 +13,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <ApolloProvider client={apolloClient}>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </QueryClientProvider>
+    </ApolloProvider>
   </StrictMode>
 );

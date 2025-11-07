@@ -1,13 +1,9 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@apollo/client/react";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/hooks/useAuth";
-import { execute } from "@/graphql/execute";
-import {
-  GET_MY_BILLS_QUERY,
-  GET_MY_MONTHLY_STATS_QUERY,
-} from "@/schema/queries/bill";
+import { GET_MY_BILLS, GET_MY_MONTHLY_STATS } from "@/graphql/queries";
 
 export default function StaffDashboard() {
   const location = useLocation();
@@ -20,29 +16,19 @@ export default function StaffDashboard() {
   const currentYear = now.getFullYear();
 
   // Fetch monthly statistics from backend
-  const { data: monthlyStatsData } = useQuery({
-    queryKey: ["myMonthlyStats", currentMonth, currentYear],
-    queryFn: async () => {
-      const response = await execute(GET_MY_MONTHLY_STATS_QUERY, {
-        month: currentMonth,
-        year: currentYear,
-      });
-      return response;
+  const { data: monthlyStatsData } = useQuery(GET_MY_MONTHLY_STATS, {
+    variables: {
+      month: currentMonth,
+      year: currentYear,
     },
   });
 
   // Fetch staff's bills for total count
-  const { data: myBillsData } = useQuery({
-    queryKey: ["myBills"],
-    queryFn: async () => {
-      const response = await execute(GET_MY_BILLS_QUERY, {});
-      return response;
-    },
-  });
+  const { data: myBillsData } = useQuery(GET_MY_BILLS);
 
   const monthlyStats = {
-    count: monthlyStatsData?.data?.myMonthlyStats?.billsCount ?? 0,
-    total: monthlyStatsData?.data?.myMonthlyStats?.totalAmount ?? 0,
+    count: monthlyStatsData?.myMonthlyStats?.billsCount ?? 0,
+    total: monthlyStatsData?.myMonthlyStats?.totalAmount ?? 0,
   };
 
   const isActive = (path: string) => {
@@ -135,7 +121,7 @@ export default function StaffDashboard() {
               <div className="p-6 border rounded-lg bg-card hover:shadow-lg transition-shadow">
                 <h3 className="text-lg font-semibold mb-2">Total Bills</h3>
                 <p className="text-3xl font-bold text-primary">
-                  {myBillsData?.data?.myBills.length ?? 0}
+                  {myBillsData?.myBills.length ?? 0}
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
                   All time bills created by you

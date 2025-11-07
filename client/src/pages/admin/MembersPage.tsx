@@ -1,13 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@apollo/client/react";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingPage } from "@/components/ui/loading";
-import { execute } from "@/graphql/execute";
-import { GET_USERS_QUERY } from "@/schema/queries/user";
 import { AddMemberModal } from "@/components/members/AddMemberModal";
 import { DeleteMemberModal } from "@/components/members/DeleteMemberModal";
 import { MemberCard } from "@/components/members/MemberCard";
+import { GET_USERS } from "@/graphql/queries";
 
 export default function MembersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -16,17 +15,11 @@ export default function MembersPage() {
     name: string;
   } | null>(null);
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const response = await execute(GET_USERS_QUERY, {});
-      return response.data;
-    },
-  });
+  const { data, loading, refetch } = useQuery(GET_USERS);
 
   const users = data?.users || [];
 
-  if (isLoading) {
+  if (loading) {
     return <LoadingPage />;
   }
 
