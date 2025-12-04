@@ -11,12 +11,12 @@ type Firm {
 
 extend type Mutation {
   signUpFirm(
-    firmName: String!
-    firmEmail: String!
+    firmName: String! @length(min: 2, max: 200)
+    firmEmail: String! @length(min: 5, max: 255)
     firmAddress: String
     firmPhone: String
-    adminEmail: String!
-    adminPassword: String!
-    adminName: String!
-  ): AuthResponse!
+    adminEmail: String! @length(min: 5, max: 255)
+    adminPassword: String! @length(min: 6, max: 100)
+    adminName: String! @length(min: 2, max: 100)
+  ): AuthResponse! @rateLimit(limit: 3, duration: 300)
 }

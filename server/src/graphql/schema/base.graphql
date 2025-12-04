@@ -1,3 +1,12 @@
+# Directive Definitions
+directive @auth on FIELD_DEFINITION
+directive @hasRole(roles: [String!]!) on FIELD_DEFINITION
+directive @rateLimit(limit: Int = 10, duration: Int = 60) on FIELD_DEFINITION
+directive @length(min: Int, max: Int) on FIELD_DEFINITION | ARGUMENT_DEFINITION
+directive @deprecated(
+  reason: String = "No longer supported"
+) on FIELD_DEFINITION | ENUM_VALUE
+
 type Query {
   _empty: String
 }

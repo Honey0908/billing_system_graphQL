@@ -15,10 +15,9 @@ function excludePassword<T extends { password: string }>(user: T) {
 
 export const Query = {
   async me(_: unknown, __: unknown, context: Context) {
-    if (!context.user) throw new Error('Not authenticated');
-
+    // @auth directive handles authentication check
     const user = await prisma.user.findUnique({
-      where: { id: context.user.userId },
+      where: { id: context.user!.userId },
       include: { firm: true },
     });
 
@@ -28,10 +27,9 @@ export const Query = {
   },
 
   async users(_: unknown, __: unknown, context: Context) {
-    if (!context.user) throw new Error('Not authenticated');
-
+    // @auth and @hasRole directives handle authentication and authorization
     const users = await prisma.user.findMany({
-      where: { firmId: context.user.firmId },
+      where: { firmId: context.user!.firmId },
       include: { firm: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -78,17 +76,8 @@ export const Mutation = {
     },
     context: Context
   ) {
+    // @auth and @hasRole directives handle authentication and authorization
     const { name, email, password, role } = args;
-
-    if (!context.user) throw new Error('Not authenticated');
-
-    const requestingUser = await prisma.user.findUnique({
-      where: { id: context.user.userId },
-    });
-
-    if (!requestingUser || requestingUser.role !== 'ADMIN') {
-      throw new Error('Only ADMIN can create new users');
-    }
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) throw new Error('User with this email already exists');
@@ -101,7 +90,7 @@ export const Mutation = {
         email,
         password: hashedPassword,
         role,
-        firmId: context?.user?.firmId,
+        firmId: context.user!.firmId,
       },
       include: { firm: true },
     });
@@ -111,18 +100,10 @@ export const Mutation = {
 
   //  Delete User Mutation
   async deleteUser(_: unknown, args: { id: string }, context: Context) {
-    if (!context.user) throw new Error('Not authenticated');
-
-    const requestingUser = await prisma.user.findUnique({
-      where: { id: context.user.userId },
-    });
-
-    if (!requestingUser || requestingUser.role !== 'ADMIN') {
-      throw new Error('Only ADMIN can delete users');
-    }
+    // @auth and @hasRole directives handle authentication and authorization
 
     // Prevent deleting self
-    if (args.id === context.user.userId) {
+    if (args.id === context.user!.userId) {
       throw new Error('Cannot delete your own account');
     }
 
@@ -133,7 +114,7 @@ export const Mutation = {
     if (!user) throw new Error('User not found');
 
     // Check if user belongs to the same firm
-    if (user.firmId !== context.user.firmId) {
+    if (user.firmId !== context.user!.firmId) {
       throw new Error('Cannot delete users from other firms');
     }
 

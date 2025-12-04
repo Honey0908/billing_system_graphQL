@@ -30,28 +30,30 @@ type MonthlyStats {
 
 input BillItemInput {
   productId: ID
-  productName: String!
+  productName: String! @length(min: 1, max: 200)
   price: Float
   quantity: Int!
 }
 
 input CreateBillInput {
-  title: String!
+  title: String! @length(min: 1, max: 200)
   customerName: String
   customerPhone: String
   items: [BillItemInput!]!
 }
 
 extend type Query {
-  bills: [Bill!]!
-  bill(id: ID!): Bill
-  myBills: [Bill!]!
+  bills: [Bill!]! @auth @hasRole(roles: ["ADMIN"])
+  bill(id: ID!): Bill @auth @hasRole(roles: ["ADMIN"])
+  myBills: [Bill!]! @auth
   monthlyStats(month: Int!, year: Int!): MonthlyStats!
-  myMonthlyStats(month: Int!, year: Int!): MonthlyStats!
+    @auth
+    @hasRole(roles: ["ADMIN"])
+  myMonthlyStats(month: Int!, year: Int!): MonthlyStats! @auth
 }
 
 extend type Mutation {
-  createBill(input: CreateBillInput!): Bill!
-  updateBill(id: ID!, input: CreateBillInput!): Bill!
-  deleteBill(id: ID!): Boolean!
+  createBill(input: CreateBillInput!): Bill! @auth
+  updateBill(id: ID!, input: CreateBillInput!): Bill! @auth
+  deleteBill(id: ID!): Boolean! @auth @hasRole(roles: ["ADMIN"])
 }

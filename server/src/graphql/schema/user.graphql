@@ -20,19 +20,22 @@ type AuthResponse {
 
 extend type Mutation {
   createUser(
-    name: String!
-    email: String!
-    password: String!
+    name: String! @length(min: 2, max: 100)
+    email: String! @length(min: 5, max: 255)
+    password: String! @length(min: 6, max: 100)
     role: UserRole!
     firmId: ID!
-  ): User!
+  ): User! @auth @hasRole(roles: ["ADMIN"])
 
-  deleteUser(id: ID!): User!
+  deleteUser(id: ID!): User! @auth @hasRole(roles: ["ADMIN"])
 
-  login(email: String!, password: String!): AuthResponse!
+  login(
+    email: String! @length(min: 5, max: 255)
+    password: String! @length(min: 6, max: 100)
+  ): AuthResponse! @rateLimit(limit: 5, duration: 60)
 }
 
 extend type Query {
-  me: User
-  users: [User!]!
+  me: User @auth
+  users: [User!]! @auth @hasRole(roles: ["ADMIN"])
 }

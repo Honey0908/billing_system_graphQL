@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
+import prisma from './config/database.js';
 
 export interface Context {
-  user: { userId: string; firmId: string } | null;
+  user: { userId: string; firmId: string; role?: string } | null;
 }
 
 export async function createContext({ req }: { req: any }): Promise<Context> {
@@ -17,7 +18,19 @@ export async function createContext({ req }: { req: any }): Promise<Context> {
         userId: string;
         firmId: string;
       };
-      user = { userId: decoded.userId, firmId: decoded.firmId };
+
+      // Optionally fetch user role from database for better caching
+      // This is useful if you need role info frequently
+      const userRecord = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: { role: true },
+      });
+
+      user = {
+        userId: decoded.userId,
+        firmId: decoded.firmId,
+        role: userRecord?.role,
+      };
     } catch (err) {
       console.warn('Invalid token:', err);
     }

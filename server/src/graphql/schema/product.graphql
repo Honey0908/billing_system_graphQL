@@ -7,17 +7,19 @@ type Product {
 }
 
 input ProductInput {
-  name: String!
+  name: String! @length(min: 1, max: 200)
   price: Float!
 }
 
 extend type Query {
-  products: [Product!]!
-  product(id: ID!): Product
+  products: [Product!]! @auth
+  product(id: ID!): Product @auth
 }
 
 extend type Mutation {
-  createProduct(input: ProductInput!): Product!
+  createProduct(input: ProductInput!): Product! @auth @hasRole(roles: ["ADMIN"])
   updateProduct(id: ID!, input: ProductInput!): Product!
-  deleteProduct(id: ID!): Boolean!
+    @auth
+    @hasRole(roles: ["ADMIN"])
+  deleteProduct(id: ID!): Boolean! @auth @hasRole(roles: ["ADMIN"])
 }
